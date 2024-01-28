@@ -68,7 +68,7 @@ void setup()
 {
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
-  Serial.println("DNS and DHCP-based web client test 2024-01-27"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+  Serial.println("DNS and DHCP-based web client test 2024-01-28"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -114,10 +114,10 @@ void setup()
   //mqtt.begin("192.168.68.20", MQTT_HA_BROKER_USERNAME, MQTT_HA_BROKER_PASSWORD);
   
   //mqtt.isConnected() ? Serial.println("true") : Serial.println("false");
+   mqtt.begin(IPAddress(192,168,68,20), mqttUser, mqttUserPass);
   Serial.print("Waiting for mqtt to connect ");
   while (!mqtt.isConnected())
   {
-    mqtt.begin(IPAddress(192,168,68,20), mqttUser, mqttUserPass);
     Serial.print(".");
     delay(5000); // waiting for the connection
   }
