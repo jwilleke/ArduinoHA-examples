@@ -1,14 +1,17 @@
 #include <Arduino.h>
-#include <WiFi.h> // the
+#include <WiFi.h> // the "official" WiFi library built-in to the Board Package
 #include <WiFiClient.h>
 // #include <SPI.h>
 #include <ArduinoHA.h>
-#include "arduino_secrets.h"
-#include <my_config.h>
+#include <arduino_secrets.h> // contains secret credentials and API keys for Arduino project.
+#include <my_config.h> // contains values I use for all my Arduino projects.
+//#include <ArduinoHADefines.h>
+// I was thinking this would be seen by the ArduinoHA.cpp code and provide more debug data, but it doesn't seem to do anything.
+// It appears there is no overloading for #define symbols.
+//#define ARDUINOHA_DEBUG_PRINT Serial.print
+//#define ARDUINOHA_DEBUG_PRINTLN Serial.println
+//#define ARDUINOHA_DEBUG
 
-extern uint8_t NINA_GPIO0; // Add this line to declare NINA_GPIO0
-#define ARDUINOHA_DEBUG_PRINT
-// #define ARDUINOHA_TEST
 
 bool exitApp = false;
 
@@ -22,6 +25,7 @@ char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 char mqttUser[] = MQTT_HA_BROKER_USERNAME;
 char mqttUserPass[] = MQTT_HA_BROKER_PASSWORD;
+byte mac[6];
 
 WiFiClient wifiClient;
 HADevice device;
@@ -69,16 +73,17 @@ void printCurrentNet()
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());
 
-  // print the MAC address of the router you're attached to:
+  // print the MAC address of SSID you're attached to:
   byte bssid[6];
   WiFi.BSSID(bssid);
   Serial.print("BSSID: ");
   printByetArray(bssid, 6);
 
-  byte mac[6];
+  // Get the MAC adrress of this device
   WiFi.macAddress(mac);
   Serial.print("MAC: ");
   printByetArray(mac, 6);
+  
   // print the received signal strength:
   long rssi = WiFi.RSSI();
   Serial.print("signal strength (RSSI): ");
@@ -96,7 +101,6 @@ void setup()
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-01-28"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
-
   // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED)
@@ -113,8 +117,13 @@ void setup()
   lastAvailabilityToggleAt = millis();
 
   // set device's details (optional)
-  device.setSoftwareVersion("1.0.0");
+  device.setSoftwareVersion("1.0.0"); 
+  device.setManufacturer("JWILLEKE");
+  // set device's details (Required)
+  device.setName("nTank");
+  device.setUniqueId(mac,6); // required
 
+// ==================== SENSOR SENSOR DEFINITiON ====================
   sensor.setCurrentState(lastInputState); // optional
   sensor.setName("XXXXXX-YYYY");
   sensor.setDeviceClass("door"); // optional
@@ -138,32 +147,6 @@ void setup()
   Serial.print("mqtt.begin() returned: ");
   Serial.println(mbegin);
 
-  if (mbegin == 1)
-  {
-    Serial.println("Connection successful");
-  }
-  else
-  {
-    Serial.println("Connection failed");
-  }
-
-  Serial.print("Waiting for mqtt to connect ");
-  unsigned long mqttMillis = millis();
-  while (!mqtt.isConnected())
-  {
-    if ((millis() - mqttMillis) > 10000)
-    {
-      Serial.println("MQTT connection Timeout");
-      exitApp = true;
-      break;
-    }
-  }
-  if (exitApp)
-  {
-     Serial.println("MQTT broker Connection FAILED!");
-    Serial.println("Exiting app");
-    return;
-  }
   Serial.println();
   Serial.println("Connected to the MQTT broker");
   Serial.println("Exit setup...");
