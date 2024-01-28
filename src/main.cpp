@@ -1,74 +1,103 @@
 #include <Arduino.h>
-#include <WiFi.h>
+#include <WiFi.h> // the
 #include <WiFiClient.h>
-#include <SPI.h>
-// #include <Ethernet.h>
+// #include <SPI.h>
 #include <ArduinoHA.h>
 #include "arduino_secrets.h"
 #include <my_config.h>
 
-#define BROKER_ADDR IPAddress(192,168, 68, 20)
+extern uint8_t NINA_GPIO0; // Add this line to declare NINA_GPIO0
+#define ARDUINOHA_DEBUG_PRINT
+// #define ARDUINOHA_TEST
+
+bool exitApp = false;
+
+#define BROKER_ADDR IPAddress(192, 168, 68, 20)
 // #define BROKER_USERNAME   BROKER_USERNAME // replace with your credentials
 // #define BROKER_PASSWORD   BROKER_PASSWORD // replace with your credentials
 //  f4:12:fa:a0:81:c0
-byte mac[] = {0xF4, 0x12, 0xFA, 0xA0, 0x81, 0xC0};
+// byte mac[] = {0xF4, 0x12, 0xFA, 0xA0, 0x81, 0xC0};
 
 char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 char mqttUser[] = MQTT_HA_BROKER_USERNAME;
 char mqttUserPass[] = MQTT_HA_BROKER_PASSWORD;
 
-WiFiClient client;
+WiFiClient wifiClient;
 HADevice device;
-HAMqtt mqtt(client, device);
 
-// HALight::BrightnessFeature enables support for setting brightness of the light.
-// HALight::ColorTemperatureFeature enables support for setting color temperature of the light.
-// Both features are optional and you can remove them if they're not needed.
-// "prettyLight" is unique ID of the light. You should define your own ID.
-HALight light("prettyLight", HALight::BrightnessFeature | HALight::ColorTemperatureFeature | HALight::RGBFeature);
+// ==================== SENSOR SENSOR DEFINITiON ====================
+// A sensor is a prt of this device that measures a physical quantity and converts it into a signal
+#define INPUT_PIN 9
 
-void onStateCommand(bool state, HALight *sender)
+unsigned long lastReadAt = millis();
+unsigned long lastAvailabilityToggleAt = millis();
+bool lastInputState = false;
+
+// "myInput" is unique ID of the sensor. You should define you own ID.
+HABinarySensor sensor("MY_INPUT");
+
+// ==================== END OF THE SENSOR DEFINITiON ====================
+
+// assign the device and the sensor to the MQTT client
+HAMqtt mqtt(wifiClient, device);
+
+/**
+ *
+ */
+
+void printByetArray(byte mac[], int len)
 {
-  Serial.print("State: ");
-  Serial.println(state);
-
-  sender->setState(state); // report state back to the Home Assistant
+  for (int i = len; i > 0; i--)
+  {
+    if (mac[i] < 16)
+    {
+      Serial.print("0");
+    }
+    Serial.print(mac[i], HEX);
+    if (i > 0)
+    {
+      Serial.print(":");
+    }
+  }
+  Serial.println();
 }
 
-void onBrightnessCommand(uint8_t brightness, HALight *sender)
+void printCurrentNet()
 {
-  Serial.print("Brightness: ");
-  Serial.println(brightness);
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
 
-  sender->setBrightness(brightness); // report brightness back to the Home Assistant
-}
+  // print the MAC address of the router you're attached to:
+  byte bssid[6];
+  WiFi.BSSID(bssid);
+  Serial.print("BSSID: ");
+  printByetArray(bssid, 6);
 
-void onColorTemperatureCommand(uint16_t temperature, HALight *sender)
-{
-  Serial.print("Color temperature: ");
-  Serial.println(temperature);
+  byte mac[6];
+  WiFi.macAddress(mac);
+  Serial.print("MAC: ");
+  printByetArray(mac, 6);
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI): ");
+  Serial.println(rssi);
 
-  sender->setColorTemperature(temperature); // report color temperature back to the Home Assistant
-}
-
-void onRGBColorCommand(HALight::RGBColor color, HALight *sender)
-{
-  Serial.print("Red: ");
-  Serial.println(color.red);
-  Serial.print("Green: ");
-  Serial.println(color.green);
-  Serial.print("Blue: ");
-  Serial.println(color.blue);
-
-  sender->setRGBColor(color); // report color back to the Home Assistant
-}
+  // print the encryption type:
+  byte encryption = WiFi.encryptionType();
+  Serial.print("Encryption Type: ");
+  Serial.println(encryption, HEX);
+  Serial.println();
+} // end printCurrentNet
 
 void setup()
 {
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-01-28"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+
+  // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -77,59 +106,93 @@ void setup()
   }
   Serial.println();
   Serial.println("Connected to the network");
-  Serial.println();
+  printCurrentNet();
 
   // set device's details (optional)
-  device.setName("ntank");
+  lastReadAt = millis();
+  lastAvailabilityToggleAt = millis();
+
+  // set device's details (optional)
   device.setSoftwareVersion("1.0.0");
-    // Unique ID must be set!
-    byte mac[6];
-    WiFi.macAddress(mac);
-    device.setUniqueId(mac, sizeof(mac));
 
-  // configure light (optional)
-  light.setName("XXXXXX-YYYY");
+  sensor.setCurrentState(lastInputState); // optional
+  sensor.setName("XXXXXX-YYYY");
+  sensor.setDeviceClass("door"); // optional
+  // This method enables availability for all device types registered on the device.
+  // For example, if you have 5 sensors on the same device, you can enable
+  // shared availability and change availability state of all sensors using
+  // single method call "device.setAvailability(false|true)"
+  device.enableSharedAvailability();
 
-  // Optionally you can set retain flag for the HA commands
-  // light.setRetain(true);
+  // Optionally, you can enable MQTT LWT feature. If device will lose connection
+  // to the broker, all device types related to it will be marked as offline in
+  // the Home Assistant Panel.
+  device.enableLastWill();
 
-  // Maximum brightness level can be changed as follows:
-  // light.setBrightnessScale(50);
+  // mqtt.isConnected() ? Serial.println("true") : Serial.println("false");
+  Serial.print("Connecting to MQTT broker at ");
+  Serial.println(IPAddress(192, 168, 68, 20));
 
-  // Optionally you can enable optimistic mode for the HALight.
-  // In this mode you won't need to report state back to the HA when commands are executed.
-  // light.setOptimistic(true);
+  int mbegin = mqtt.begin(IPAddress(192, 168, 68, 20), 1833, mqttUser, mqttUserPass);
 
-  // Color temperature range (optional)
-  // light.setMinMireds(50);
-  // light.setMaxMireds(200);
+  Serial.print("mqtt.begin() returned: ");
+  Serial.println(mbegin);
 
-  // handle light states
-  light.onStateCommand(onStateCommand);
-  light.onBrightnessCommand(onBrightnessCommand);             // optional
-  light.onColorTemperatureCommand(onColorTemperatureCommand); // optional
-  light.onRGBColorCommand(onRGBColorCommand);                 // optional
+  if (mbegin == 1)
+  {
+    Serial.println("Connection successful");
+  }
+  else
+  {
+    Serial.println("Connection failed");
+  }
 
-  //mqtt.begin(IPAddress(192,168, 68, 20), MQTT_HA_BROKER_USERNAME, MQTT_HA_BROKER_PASSWORD);
-  //mqtt.begin("192.168.68.20", MQTT_HA_BROKER_USERNAME, MQTT_HA_BROKER_PASSWORD);
-  
-  //mqtt.isConnected() ? Serial.println("true") : Serial.println("false");
-   mqtt.begin(IPAddress(192,168,68,20), mqttUser, mqttUserPass);
   Serial.print("Waiting for mqtt to connect ");
+  unsigned long mqttMillis = millis();
   while (!mqtt.isConnected())
   {
-    Serial.print(".");
-    delay(5000); // waiting for the connection
+    if ((millis() - mqttMillis) > 10000)
+    {
+      Serial.println("MQTT connection Timeout");
+      exitApp = true;
+      break;
+    }
+  }
+  if (exitApp)
+  {
+     Serial.println("MQTT broker Connection FAILED!");
+    Serial.println("Exiting app");
+    return;
   }
   Serial.println();
-  Serial.println("Connected to the MQtt broker");
+  Serial.println("Connected to the MQTT broker");
   Serial.println("Exit setup...");
 }
 
 void loop()
 {
+  if (exitApp)
+  {
+    Serial.println("Entering empty Loop forever...");
+    mqtt.disconnect();
+    while (true)
+    {};
+  }
   // Ethernet.maintain();
   mqtt.loop();
+  if ((millis() - lastReadAt) > 30)
+  { // read in 30ms interval
+    // library produces MQTT message if a new state is different than the previous one
+    sensor.setState(digitalRead(INPUT_PIN));
+    lastInputState = sensor.getCurrentState();
+    lastReadAt = millis();
+  }
+
+  if ((millis() - lastAvailabilityToggleAt) > 5000)
+  {
+    device.setAvailability(!device.isAvailable());
+    lastAvailabilityToggleAt = millis();
+  }
 
   // You can also change the state at runtime as shown below.
   // This kind of logic can be used if you want to control your light using a button connected to the device.
