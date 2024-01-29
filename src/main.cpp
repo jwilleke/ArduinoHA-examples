@@ -115,13 +115,7 @@ void setup()
   lastReadAt = millis();
   lastAvailabilityToggleAt = millis();
  // ==================== DEVICE DEFINITiON ====================
-  // set device's details (Required)
-  device.setName("nTank");
-  byte deviceID[] = "001";
-  device.setUniqueId(deviceID, 4); // required
-
   
-
   
   // set device's details (optional)
   device.setSoftwareVersion("1.0.0");
@@ -131,6 +125,10 @@ void setup()
   // shared availability and change availability state of all sensors using
   // single method call "device.setAvailability(false|true)"
   device.enableSharedAvailability();
+
+  // set device's details (Required)
+  device.setName("nTank");
+  device.setUniqueId(mac, 6); // required
 
   // ==================== SENSOR SENSOR DEFINITiON ====================
   pinMode(INPUT_PIN, INPUT_PULLUP);
