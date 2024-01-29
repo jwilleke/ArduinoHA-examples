@@ -4,14 +4,13 @@
 // #include <SPI.h>
 #include <ArduinoHA.h>
 #include <arduino_secrets.h> // contains secret credentials and API keys for Arduino project.
-#include <my_config.h> // contains values I use for all my Arduino projects.
-//#include <ArduinoHADefines.h>
-// I was thinking this would be seen by the ArduinoHA.cpp code and provide more debug data, but it doesn't seem to do anything.
-// It appears there is no overloading for #define symbols.
-//#define ARDUINOHA_DEBUG_PRINT Serial.print
-//#define ARDUINOHA_DEBUG_PRINTLN Serial.println
-//#define ARDUINOHA_DEBUG
-
+#include <my_config.h>       // contains values I use for all my Arduino projects.
+// #include <ArduinoHADefines.h>
+//  I was thinking this would be seen by the ArduinoHA.cpp code and provide more debug data, but it doesn't seem to do anything.
+//  It appears there is no overloading for #define symbols.
+// #define ARDUINOHA_DEBUG_PRINT Serial.print
+// #define ARDUINOHA_DEBUG_PRINTLN Serial.println
+// #define ARDUINOHA_DEBUG
 
 bool exitApp = false;
 
@@ -83,7 +82,7 @@ void printCurrentNet()
   WiFi.macAddress(mac);
   Serial.print("MAC: ");
   printByetArray(mac, 6);
-  
+
   // print the received signal strength:
   long rssi = WiFi.RSSI();
   Serial.print("signal strength (RSSI): ");
@@ -100,7 +99,7 @@ void setup()
 {
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
-  Serial.println("DNS and DHCP-based web client test 2024-01-28"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+  Serial.println("DNS and DHCP-based web client test 2024-01-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
   // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED)
@@ -117,22 +116,29 @@ void setup()
   lastAvailabilityToggleAt = millis();
 
   // set device's details (optional)
-  device.setSoftwareVersion("1.0.0"); 
+  device.setSoftwareVersion("1.0.0");
   device.setManufacturer("JWILLEKE");
-  // set device's details (Required)
-  device.setName("nTank");
-  device.setUniqueId(mac,6); // required
-
-// ==================== SENSOR SENSOR DEFINITiON ====================
-  sensor.setCurrentState(lastInputState); // optional
-  sensor.setName("XXXXXX-YYYY");
-  sensor.setDeviceClass("door"); // optional
-  // This method enables availability for all device types registered on the device.
+    // This method enables availability for all device types registered on the device.
   // For example, if you have 5 sensors on the same device, you can enable
   // shared availability and change availability state of all sensors using
   // single method call "device.setAvailability(false|true)"
   device.enableSharedAvailability();
 
+  // set device's details (Required)
+  device.setName("nTank");
+  device.setUniqueId(mac, 6); // required
+
+  // ==================== SENSOR SENSOR DEFINITiON ====================
+  pinMode(INPUT_PIN, INPUT_PULLUP);
+  lastInputState = digitalRead(INPUT_PIN);
+  sensor.setName("XXXXXX-door");
+  sensor.setDeviceClass("door"); // optional
+  // Opetionsal items for sensor
+  // turn on "availability" feature
+  // this method also sets initial availability so you can use "true" or "false"
+  sensor.setAvailability(false);
+  sensor.setCurrentState(lastInputState); // optional
+  
   // Optionally, you can enable MQTT LWT feature. If device will lose connection
   // to the broker, all device types related to it will be marked as offline in
   // the Home Assistant Panel.
@@ -142,7 +148,7 @@ void setup()
   Serial.print("Connecting to MQTT broker at ");
   Serial.println(IPAddress(192, 168, 68, 20));
 
-  int mbegin = mqtt.begin(IPAddress(192, 168, 68, 20), 1833, mqttUser, mqttUserPass);
+  bool mbegin = mqtt.begin(IPAddress(192, 168, 68, 20), 1833, mqttUser, mqttUserPass);
 
   Serial.print("mqtt.begin() returned: ");
   Serial.println(mbegin);
@@ -159,7 +165,8 @@ void loop()
     Serial.println("Entering empty Loop forever...");
     mqtt.disconnect();
     while (true)
-    {};
+    {
+    };
   }
   // Ethernet.maintain();
   mqtt.loop();
