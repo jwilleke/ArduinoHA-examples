@@ -12,6 +12,8 @@
 // #define ARDUINOHA_DEBUG_PRINTLN Serial.println
 // #define ARDUINOHA_DEBUG
 
+// https://github.com/dawidchyrzynski/arduino-home-assistant/blob/main/examples/sensor-integer/sensor-integer.ino
+
 bool exitApp = false;
 
 #define BROKER_ADDR IPAddress(192, 168, 68, 20)
@@ -24,26 +26,23 @@ char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 char mqttUser[] = MQTT_HA_BROKER_USERNAME;
 char mqttUserPass[] = MQTT_HA_BROKER_PASSWORD;
-byte mac[6];
+char deviceName[] = "XXXDevice";
+// use your own unique bytes sequence or use mac of WiFi
+// f4:12:fa:a0:81:c0
+byte myId[] = {0xF4, 0x12, 0xFA, 0xA0, 0x81, 0xC0};
+HADevice device(myId, sizeof(myId));
 
 WiFiClient wifiClient;
-HADevice device;
-
-// ==================== SENSOR SENSOR DEFINITiON ====================
-// A sensor is a prt of this device that measures a physical quantity and converts it into a signal
-#define INPUT_PIN 9
-
-unsigned long lastReadAt = millis();
-unsigned long lastAvailabilityToggleAt = millis();
-bool lastInputState = false;
-
-// "myInput" is unique ID of the sensor. You should define you own ID.
-HABinarySensor sensor("MY_INPUT");
-
-// ==================== END OF THE SENSOR DEFINITiON ====================
 
 // assign the device and the sensor to the MQTT client
 HAMqtt mqtt(wifiClient, device);
+
+// ==================== SENSOR SENSOR DEFINITiON ====================
+// A sensor is a prt of this device that measures a physical quantity and converts it into a signal
+// The unique ID of the sensor. It needs to be unique in a scope of your device.
+HASensorNumber uptimeSensor("ardUptime");
+unsigned long lastUpdateAt = 0;
+// ==================== END OF THE DEVICE DEFINITiON ====================
 
 /**
  *
@@ -78,10 +77,8 @@ void printCurrentNet()
   Serial.print("BSSID: ");
   printByetArray(bssid, 6);
 
-  // Get the MAC adrress of this device
-  WiFi.macAddress(mac);
   Serial.print("MAC: ");
-  printByetArray(mac, 6);
+  printByetArray(myId, sizeof(myId));
 
   // print the received signal strength:
   long rssi = WiFi.RSSI();
@@ -100,6 +97,7 @@ void setup()
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-01-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+
   // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED)
@@ -112,52 +110,24 @@ void setup()
   printCurrentNet();
 
   // set device's details (optional)
-  lastReadAt = millis();
-  lastAvailabilityToggleAt = millis();
- // ==================== DEVICE DEFINITiON ====================
-  
-  
-  // set device's details (optional)
   device.setSoftwareVersion("1.0.0");
-  device.setManufacturer("JWILLEKE");
-    // This method enables availability for all device types registered on the device.
-  // For example, if you have 5 sensors on the same device, you can enable
-  // shared availability and change availability state of all sensors using
-  // single method call "device.setAvailability(false|true)"
+  device.setManufacturer("arduino");
+  device.setModel("uno_r4_wifi");
+  // ...
   device.enableSharedAvailability();
-
-  // set device's details (Required)
-  device.setName("nTank");
-  device.setUniqueId(mac, 6); // required
-
-  // ==================== SENSOR SENSOR DEFINITiON ====================
-  pinMode(INPUT_PIN, INPUT_PULLUP);
-  lastInputState = digitalRead(INPUT_PIN);
-  sensor.setName("XXXXXX-door");
-  sensor.setDeviceClass("door"); // optional
-  // Opetionsal items for sensor
-  // turn on "availability" feature
-  // this method also sets initial availability so you can use "true" or "false"
-  sensor.setAvailability(false);
-  sensor.setCurrentState(lastInputState); // optional
-  
-  // Optionally, you can enable MQTT LWT feature. If device will lose connection
-  // to the broker, all device types related to it will be marked as offline in
-  // the Home Assistant Panel.
+  //device.setAvailability(false); // changes default state to offline
+  // MQTT LWT
   device.enableLastWill();
+  // Discovery
+  mqtt.setDiscoveryPrefix("homeassistant");
+  mqtt.setDataPrefix("aha");
 
-  // mqtt.isConnected() ? Serial.println("true") : Serial.println("false");
-  Serial.print("Connecting to MQTT broker at ");
-  Serial.println(IPAddress(192, 168, 68, 20));
+  // configure sensor (optional)
+  uptimeSensor.setIcon("mdi:home");
+  uptimeSensor.setName("XXXUptime");
+  uptimeSensor.setUnitOfMeasurement("s");
 
-  bool mbegin = mqtt.begin(IPAddress(192, 168, 68, 20), 1833, mqttUser, mqttUserPass);
-
-  Serial.print("mqtt.begin() returned: ");
-  Serial.println(mbegin);
-
-  Serial.println();
-  Serial.println("Connected to the MQTT broker");
-  Serial.println("Exit setup...");
+  mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
 }
 
 void loop()
@@ -172,18 +142,11 @@ void loop()
   }
   // Ethernet.maintain();
   mqtt.loop();
-  if ((millis() - lastReadAt) > 30)
-  { // read in 30ms interval
-    // library produces MQTT message if a new state is different than the previous one
-    sensor.setState(digitalRead(INPUT_PIN));
-    lastInputState = sensor.getCurrentState();
-    lastReadAt = millis();
-  }
-
-  if ((millis() - lastAvailabilityToggleAt) > 5000)
-  {
-    device.setAvailability(!device.isAvailable());
-    lastAvailabilityToggleAt = millis();
+  if ((millis() - lastUpdateAt) > 2000)
+  { // update in 2s interval
+    unsigned long uptimeValue = millis() / 1000;
+    uptimeSensor.setValue(uptimeValue);
+    lastUpdateAt = millis();
   }
 
   // You can also change the state at runtime as shown below.
