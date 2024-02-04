@@ -252,6 +252,7 @@ void setup()
   device.setSoftwareVersion("1.0.0");
   device.setManufacturer("arduino");
   device.setModel("uno_r4_wifi");
+  device.setName(deviceName);
   // ...
   device.enableSharedAvailability();
   // device.setAvailability(false); // changes default state to offline
