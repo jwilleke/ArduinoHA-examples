@@ -5,23 +5,11 @@
 #include <ArduinoHA.h>
 #include <arduino_secrets.h> // contains secret credentials and API keys for Arduino project.
 #include <my_config.h>       // contains values I use for all my Arduino projects.
-
-// #include <ArduinoHADefines.h>
-//  I was thinking this would be seen by the ArduinoHA.cpp code and provide more debug data, but it doesn't seem to do anything.
-//  It appears there is no overloading for #define symbols.
-// #define ARDUINOHA_DEBUG_PRINT Serial.print
-// #define ARDUINOHA_DEBUG_PRINTLN Serial.println
-// #define ARDUINOHA_DEBUG
+#include <ha_config.h>
 
 // https://github.com/dawidchyrzynski/arduino-home-assistant/blob/main/examples/sensor-integer/sensor-integer.ino
 
 bool exitApp = false;
-
-#define ANALOG_SUPPLY_VOLTAGE 5.0
-#define BROKER_ADDR IPAddress(192, 168, 68, 20)
-#define ORPPIN A2 // semsors[2]
-#define PHPIN A4  // semsors[0]
-#define TEMPPIN 2 // semsors[1]
 
 OneWire ds(TEMPPIN);
 
@@ -82,7 +70,7 @@ double getValueTemperatureSensor()
   }
 
   if ( addr[0] != 0x10 && addr[0] != 0x28) {
-      Serial.print("Device is not recognized");
+      DEBUG_PRINT("Device is not recognized");
       return -1000;
   }
 
@@ -119,15 +107,15 @@ double getValuePHSensor(float temperature)
 
   double temp = temperature ? temperature: _temperature; 
   float rawReadVoltage = analogRead(PHPIN);
-  Serial.print("rawReadVoltage: ");
-  Serial.println(rawReadVoltage);
+  DEBUG_PRINT("rawReadVoltage: ");
+  DEBUG_PRINTLN(rawReadVoltage);
   float slope = (7.0 - 4.0) / ((_neutralVoltage - 1500.0) / 3.0 - (_acidVoltage - 1500.0) / 3.0);
   float intercept = 7.0 - slope * (_neutralVoltage - 1500.0) / 3.0;
   float _phValue = slope * (rawReadVoltage - 1500.0) / 3.0 + intercept; // y = k*x + b
 
   //* ANALOG_SUPPLY_VOLTAGE / 1023;
-  Serial.print("pH Value: ");
-  Serial.println(_phValue);
+  DEBUG_PRINT("pH Value: ");
+  DEBUG_PRINTLN(_phValue);
   return _phValue;
 }
 
@@ -144,7 +132,7 @@ void printByetArray(byte mac[], int len)
       Serial.print("0");
     }
     Serial.print(mac[i], HEX);
-    if (i > 0)
+    if (i > 1)
     {
       Serial.print(":");
     }
@@ -181,9 +169,10 @@ void printCurrentNet()
 
 void setup()
 {
+  //DEBUG_INIT();
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
-  Serial.println("DNS and DHCP-based web client test 2024-01-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+  Serial.println("DNS and DHCP-based web client test 2024-02-04"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
 
   // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
