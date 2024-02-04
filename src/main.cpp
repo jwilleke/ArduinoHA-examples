@@ -26,7 +26,7 @@ char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 char mqttUser[] = MQTT_HA_BROKER_USERNAME;
 char mqttUserPass[] = MQTT_HA_BROKER_PASSWORD;
-char deviceName[] = "XXXDevice";
+char deviceName[] = "Nutrient Tank";
 // use your own unique bytes sequence or use mac of WiFi
 // f4:12:fa:a0:81:c0
 byte myId[] = {0xF4, 0x12, 0xFA, 0xA0, 0x81, 0xC0};
