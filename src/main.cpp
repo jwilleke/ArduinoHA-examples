@@ -16,8 +16,11 @@ OneWire ds(TEMPPIN);
 // values for the phSensor
 double _temperature = 25.0;
 double _phValue = 7.0;
-double _acidVoltage = 421.0;   // buffer solution 4.0 at 25C
+double _acidVoltage = 421.0;    // buffer solution 4.0 at 25C
 double _neutralVoltage = 315.0; // buffer solution 7.0 at 25C
+float averageTDSVoltage = 0;    // store the total value of the sensor since we started
+float averageECvalue = 0;       // store the total value of the sensor since we started
+int16_t readCount = 0;
 
 char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
@@ -40,50 +43,104 @@ HAMqtt mqtt(wifiClient, device);
 HASensorNumber uptimeSensor("ardUptime");
 // "myAnalogInput" is unique ID of the sensor. You should define your own ID. (PrecisionP2 is points after the decimal point)
 HASensorNumber orbSensor("ORB", HASensorNumber::PrecisionP2);
-
+// setup phSensor
 HASensorNumber phSensor("PH", HASensorNumber::PrecisionP1);
-HASensorNumber temperature("Temperature", HASensorNumber::PrecisionP0);
-
+// setup temperatureSensor
+HASensorNumber temperature("Temperature", HASensorNumber::PrecisionP1);
+// setup tdsSensor
+HASensorNumber tdsSensor("TDS", HASensorNumber::PrecisionP1);
+// setup ecSensor
+HASensorNumber ecSensor("EC", HASensorNumber::PrecisionP2);
 
 unsigned long lastUpdateAt = 0;
 // ==================== END OF THE DEVICE DEFINITiON ====================
 
+float getECValue(float temperature)
+{
+
+  float _temperatureValue = temperature ? temperature : _temperature;
+  float voltage = analogRead(ECPIN)/1024.0*5000;  // read the voltage (From https://github.com/DFRobot/DFRobot_EC/blob/master/example/DFRobot_EC_Test/DFRobot_EC_Test.ino)
+  //float _ecvalue = 0.0;
+  float _kvalue = 1.0;
+  float _kvalueLow = 1.0;
+  float _kvalueHigh = 1.0; 
+  //float _voltage = 0.0;
+  float value = 0;
+  float _rawEC = 1000 * voltage / ECRES2 / ECREF;
+  float valueTemp = valueTemp = _rawEC * _kvalue;     // calculate the EC value after automatic shift
+  // automatic shift process
+  // First Range:(0,2); Second Range:(2,20)
+  if (valueTemp > 2.5)
+  {
+    _kvalue = _kvalueHigh;
+  }
+  else if (valueTemp < 2.0)
+  {
+    _kvalue = _kvalueLow;
+  }
+  value = _rawEC * _kvalue;     // calculate the EC value after automatic shift
+  value = value / (1.0 + 0.0185 * (_temperatureValue - 25.0)); // temperature compensation
+  return value;
+}
+
+/**
+ * @brief  This function is used to get the TDS value from the TDS sensor
+ * @param temperature The temperature value to be used for the TDS sensor compensationCoefficient
+
+*/
+double getTDSValue(float temperature)
+{
+  float rawReadVoltage = analogRead(TDSPIN);
+  // calculate the average value of the sensor since we started
+  averageTDSVoltage = (averageTDSVoltage + rawReadVoltage) / readCount;
+  // temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+  float compensationCoefficient = 1.0 + 0.02 * (temperature - 25.0);
+  // temperature compensation
+  float compensationVolatge = averageTDSVoltage / compensationCoefficient;
+  // convert voltage value to tds value
+  float tdsValue = (133.42 * compensationVolatge * compensationVolatge * compensationVolatge - 255.86 * compensationVolatge * compensationVolatge + 857.39 * compensationVolatge) * 0.5;
+  return tdsValue;
+}
+
 /**
  * @brief  This function is used to get the temperature value from the temperature sensor.
-*/
+ */
 double getValueTemperatureSensor()
 {
-  //returns the temperature from one DS18S20 in DEG Celsius
+  // returns the temperature from one DS18S20 in DEG Celsius
 
   byte data[12];
   byte addr[8];
 
-  if ( !ds.search(addr)) {
-      //no more sensors on chain, reset search
-      ds.reset_search();
-      return -1000;
+  if (!ds.search(addr))
+  {
+    // no more sensors on chain, reset search
+    ds.reset_search();
+    return -1000;
   }
 
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.println("CRC is not valid!");
-      return -1000;
+  if (OneWire::crc8(addr, 7) != addr[7])
+  {
+    Serial.println("CRC is not valid!");
+    return -1000;
   }
 
-  if ( addr[0] != 0x10 && addr[0] != 0x28) {
-      DEBUG_PRINT("Device is not recognized");
-      return -1000;
+  if (addr[0] != 0x10 && addr[0] != 0x28)
+  {
+    DEBUG_PRINT("Device is not recognized");
+    return -1000;
   }
 
   ds.reset();
   ds.select(addr);
-  ds.write(0x44,1); // start conversion, with parasite power on at the end
+  ds.write(0x44, 1); // start conversion, with parasite power on at the end
 
   byte present = ds.reset();
   ds.select(addr);
   ds.write(0xBE); // Read Scratchpad
 
-
-  for (int i = 0; i < 9; i++) { // we need 9 bytes
+  for (int i = 0; i < 9; i++)
+  { // we need 9 bytes
     data[i] = ds.read();
   }
 
@@ -92,20 +149,19 @@ double getValueTemperatureSensor()
   byte MSB = data[1];
   byte LSB = data[0];
 
-  float tempRead = ((MSB << 8) | LSB); //using two's compliment
+  float tempRead = ((MSB << 8) | LSB); // using two's compliment
   float TemperatureSum = tempRead / 16;
 
   return TemperatureSum;
-
 }
 
 /**
  *  @brief  This function is used to get the pH value from the pH sensor.
-*/
+ */
 double getValuePHSensor(float temperature)
 {
 
-  double temp = temperature ? temperature: _temperature; 
+  double temp = temperature ? temperature : _temperature;
   float rawReadVoltage = analogRead(PHPIN);
   DEBUG_PRINT("rawReadVoltage: ");
   DEBUG_PRINTLN(rawReadVoltage);
@@ -169,7 +225,7 @@ void printCurrentNet()
 
 void setup()
 {
-  //DEBUG_INIT();
+  // DEBUG_INIT();
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-02-04"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
@@ -200,8 +256,8 @@ void setup()
 
   // configure sensor (optional)
   uptimeSensor.setIcon("mdi:mdi-av-timer");
-  uptimeSensor.setName("XXXUptime");
-  uptimeSensor.setUnitOfMeasurement("s");
+  uptimeSensor.setName("XXXReadCount");
+  uptimeSensor.setUnitOfMeasurement("#");
   // orbSensor.setIcon("mdi:home");
   orbSensor.setIcon("mdi:current-dc");
   orbSensor.setName("XXXOrb");
@@ -214,6 +270,14 @@ void setup()
   temperature.setIcon("mdi:thermometer");
   temperature.setName("Temperature");
   temperature.setUnitOfMeasurement("°C");
+  // setup the tdsSensor
+  tdsSensor.setIcon("mdi:water");
+  tdsSensor.setName("TDS");
+  tdsSensor.setUnitOfMeasurement("ppm");
+  // setup the ecSensor
+  ecSensor.setIcon("mdi:water");
+  ecSensor.setName("EC");
+  ecSensor.setUnitOfMeasurement("ms/cm");
   // start the mqtt broker connection
   mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
 }
@@ -233,8 +297,9 @@ void loop()
   // update the sensor values every 2s
   if ((millis() - lastUpdateAt) > 2000)
   { // update in 2s interval
-    unsigned long uptimeValue = millis() / 1000;
-    uptimeSensor.setValue(uptimeValue);
+    // unsigned long uptimeValue = millis() / 1000;
+    readCount++;
+    uptimeSensor.setValue(readCount);
     // set orbSensor value
     uint16_t reading = analogRead(ORPPIN);
     orbSensor.setValue(reading);
@@ -242,11 +307,13 @@ void loop()
     float tempReading = getValueTemperatureSensor();
     temperature.setValue(tempReading);
     // set phSensor values
-    float phReading = getValuePHSensor(tempReading); 
+    float phReading = getValuePHSensor(tempReading);
     phSensor.setValue(phReading);
-
-  // reset loop timer
-  lastUpdateAt = millis();
+    // set tdsSensor value
+    float tdsReading = getTDSValue(tempReading);
+    tdsSensor.setValue(tdsReading);
+    // reset loop timer
+    lastUpdateAt = millis();
   }
 
   // You can also change the state at runtime as shown below.

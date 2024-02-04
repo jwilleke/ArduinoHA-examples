@@ -22,7 +22,13 @@ Sensor pin settings
 #define LEVELPIN 3
 #define RELAYPIN 4 ??? // not used
 
+// EC sesor values
+#define EEPROM_write(address, p) {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) EEPROM.write(address+i, pp[i]);}
+#define EEPROM_read(address, p)  {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) pp[i]=EEPROM.read(address+i);}
 
+#define KVALUEADDR 0x0A    //the start address of the K value stored in the EEPROM
+#define ECRES2 820.0
+#define ECREF 200.0
 
 //#define DEBUG_PRINT_ENABLED // Comment out this line of code if you don't want to see the debug print
 
@@ -35,3 +41,5 @@ Sensor pin settings
   #define DEBUG_PRINTLN(x)
   #define DEBUG_PRINT(x)
 #endif
+
+
