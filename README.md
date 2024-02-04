@@ -10,7 +10,7 @@
 
 ### HADevice
 
-HADevice represents the physical device where the library is installed. 
+HADevice represents the physical device where the library is installed.
 Logically it’s a group of types like sensors, switches, lights and so on. In the Home Assistant, it’s listed with properties that may be configured using the library’s API.
 
 Each property except the unique ID is optional. Setting optional properties increases flash and RAM usage so it’s not recommended to set them on lower-spec MCUs. The supported properties are:
