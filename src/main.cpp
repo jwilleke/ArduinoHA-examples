@@ -34,8 +34,8 @@ HADevice device(myId, sizeof(myId));
 
 WiFiClient wifiClient;
 
-// assign the device and the sensor to the MQTT client
-HAMqtt mqtt(wifiClient, device);
+// assign the device and the sensor to the MQTT client and make the max number of sensors 12
+HAMqtt mqtt(wifiClient, device, 12);
 
 // ==================== SENSOR SENSOR DEFINITiON ====================
 // A sensor is a prt of this device that measures a physical quantity and converts it into a signal
@@ -51,7 +51,8 @@ HASensorNumber temperature("Temperature", HASensorNumber::PrecisionP1);
 HASensorNumber tdsSensor("TDS", HASensorNumber::PrecisionP1);
 // setup ecSensor
 HASensorNumber ecSensor("EC", HASensorNumber::PrecisionP2);
-
+// setup tankLevelSensor
+HABinarySensor tnakLevelSensor("TankLevel");
 unsigned long lastUpdateAt = 0;
 // ==================== END OF THE DEVICE DEFINITiON ====================
 
@@ -59,15 +60,16 @@ float getECValue(float temperature)
 {
 
   float _temperatureValue = temperature ? temperature : _temperature;
-  float voltage = analogRead(ECPIN)/1024.0*5000;  // read the voltage (From https://github.com/DFRobot/DFRobot_EC/blob/master/example/DFRobot_EC_Test/DFRobot_EC_Test.ino)
-  //float _ecvalue = 0.0;
+  float voltage = analogRead(ECPIN) / 1024.0 * 5000; // read the voltage (From https://github.com/DFRobot/DFRobot_EC/blob/master/example/DFRobot_EC_Test/DFRobot_EC_Test.ino)
+  DEBUG_PRINT("rawECVoltage: ");
+  DEBUG_PRINTLN(voltage);
+  // float _ecvalue = 0.0;
   float _kvalue = 1.0;
   float _kvalueLow = 1.0;
-  float _kvalueHigh = 1.0; 
-  //float _voltage = 0.0;
-  float value = 0;
+  float _kvalueHigh = 1.0;
+  // float _voltage = 0.0;
   float _rawEC = 1000 * voltage / ECRES2 / ECREF;
-  float valueTemp = valueTemp = _rawEC * _kvalue;     // calculate the EC value after automatic shift
+  float valueTemp = valueTemp = _rawEC * _kvalue; // calculate the EC value after automatic shift
   // automatic shift process
   // First Range:(0,2); Second Range:(2,20)
   if (valueTemp > 2.5)
@@ -78,8 +80,13 @@ float getECValue(float temperature)
   {
     _kvalue = _kvalueLow;
   }
-  value = _rawEC * _kvalue;     // calculate the EC value after automatic shift
+  float value = _rawEC * _kvalue; // calculate the EC value after automatic shift
+  DEBUG_PRINT("ecShiftVoltage: ");
+  DEBUG_PRINTLN(value);
   value = value / (1.0 + 0.0185 * (_temperatureValue - 25.0)); // temperature compensation
+  DEBUG_PRINT("EC Value after temp comp: ");
+  DEBUG_PRINTLN(value);
+
   return value;
 }
 
@@ -256,15 +263,15 @@ void setup()
 
   // configure sensor (optional)
   uptimeSensor.setIcon("mdi:mdi-av-timer");
-  uptimeSensor.setName("XXXReadCount");
+  uptimeSensor.setName("ReadCount");
   uptimeSensor.setUnitOfMeasurement("#");
   // orbSensor.setIcon("mdi:home");
   orbSensor.setIcon("mdi:current-dc");
-  orbSensor.setName("XXXOrb");
+  orbSensor.setName("ORB");
   orbSensor.setUnitOfMeasurement("mv");
   // setup phSensor
   phSensor.setIcon("mdi:oil-temperature");
-  phSensor.setName("XXXpH");
+  phSensor.setName("pH");
   phSensor.setUnitOfMeasurement("pH");
   // setup the device
   temperature.setIcon("mdi:thermometer");
@@ -278,6 +285,11 @@ void setup()
   ecSensor.setIcon("mdi:water");
   ecSensor.setName("EC");
   ecSensor.setUnitOfMeasurement("ms/cm");
+  // setup the tankLevelSensor
+  tnakLevelSensor.setIcon("mdi:water");
+  tnakLevelSensor.setName("Tank Level");
+  tnakLevelSensor.setDeviceClass("moisture");
+  pinMode(LEVELPIN, INPUT);
   // start the mqtt broker connection
   mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
 }
@@ -312,6 +324,12 @@ void loop()
     // set tdsSensor value
     float tdsReading = getTDSValue(tempReading);
     tdsSensor.setValue(tdsReading);
+    // set ecSensor value
+    float ecReading = getECValue(tempReading);
+    ecSensor.setValue(ecReading);
+    // set tankLevelSensor value
+    int levelReading = digitalRead(LEVELPIN);
+    tnakLevelSensor.setState(levelReading);
     // reset loop timer
     lastUpdateAt = millis();
   }
