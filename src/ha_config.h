@@ -35,7 +35,7 @@ Sensor pin settings
 #define ECRES2 820.0
 #define ECREF 200.0
 
-//#define DEBUG_PRINT_ENABLED // Comment out this line of code if you don't want to see the debug print
+#define DEBUG_PRINT_ENABLED // Comment out this line of code if you don't want to see the debug print
 
 #if defined(DEBUG_PRINT_ENABLED)
   #define DEBUG_INIT() Serial.begin(SERIAL_BAUD_RATE);

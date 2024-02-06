@@ -173,37 +173,36 @@ double getValueTemperatureSensor()
  * @param myswitch The switch that is being controlled
  * @param state The state of the switch
  * @param mcuPin The pin that the pump is connected to
-*/
-void switchControl( HASwitch myswitch, bool state, int mcuPin)
+ */
+void switchControl(HASwitch myswitch, bool state, int mcuPin)
 {
   if (state) // HA said turn on
   {
-    Serial.print("Turning ON Switch: ");
-    Serial.println(myswitch.getName());
-    Serial.print("Setting Switch state: (1=ON=HIGH=TRUE) ");
-    Serial.println(state);
+    DEBUG_PRINT("Turning ON Switch: ");
+    DEBUG_PRINTLN(myswitch.getName());
+    DEBUG_PRINT("Setting Switch state: (1=ON=HIGH=TRUE) ");
+    DEBUG_PRINTLN(state);
     digitalWrite(mcuPin, LOW);
     myswitch.setState(state);
     delay(PUMP_RUNTIME);
-    Serial.print("Turning OFF Switch: ");
-    Serial.println(myswitch.getName());
-    Serial.print("Setting Switch state: (0=OFF=LOW=FALSE) ");
-    Serial.println(state);
+    DEBUG_PRINT("Turning OFF Switch: ");
+    DEBUG_PRINTLN(myswitch.getName());
+    DEBUG_PRINT("Setting Switch state: (0=OFF=LOW=FALSE) ");
+    DEBUG_PRINTLN(state);
 
     digitalWrite(mcuPin, HIGH);
     myswitch.setState(LOW);
   }
   else // off
   {
-    Serial.print("Turning OFF Switch: ");
-    Serial.println(myswitch.getName());
-    Serial.print("Setting Switch state: (0=OFF=LOW=FALSE) ");
-    Serial.println(state);
+    DEBUG_PRINT("Turning OFF Switch: ");
+    DEBUG_PRINTLN(myswitch.getName());
+    DEBUG_PRINT("Setting Switch state: (0=OFF=LOW=FALSE) ");
+    DEBUG_PRINTLN(state);
     digitalWrite(mcuPin, HIGH);
     myswitch.setState(LOW);
   }
 }
-
 
 /**
  * @brief  This function is used to handle the switch commands from the Home Assistant
@@ -404,7 +403,7 @@ void setup()
   // handle switch state callback
   a2Pump.onCommand(onSwitchCommand);
   // setup the buttons for the pumps
-  
+
   phUpPump.setIcon("mdi:water");
   phUpPump.setName("pH UP Pump");
   phUpPump.setDeviceClass("switch");
@@ -441,24 +440,28 @@ void loop()
     // unsigned long uptimeValue = millis() / 1000;
     readCount++;
     uptimeSensor.setValue(readCount);
-    // set orbSensor value
-    uint16_t reading = analogRead(ORPPIN);
-    orbSensor.setValue(reading);
-    // set temperature value
-    float tempReading = getValueTemperatureSensor();
-    temperature.setValue(tempReading);
-    // set phSensor values
-    float phReading = getValuePHSensor(tempReading);
-    phSensor.setValue(phReading);
-    // set tdsSensor value
-    float tdsReading = getTDSValue(tempReading);
-    tdsSensor.setValue(tdsReading);
-    // set ecSensor value
-    float ecReading = getECValue(tempReading);
-    ecSensor.setValue(ecReading);
-    // set tankLevelSensor value
-    int levelReading = digitalRead(LEVELPIN);
-    tnakLevelSensor.setState(levelReading);
+    // ignore the imitial readings as it takes time for the sensors to stabilize
+    if (readCount > 10)
+    {
+      // set orbSensor value
+      uint16_t reading = analogRead(ORPPIN);
+      orbSensor.setValue(reading);
+      // set temperature value
+      float tempReading = getValueTemperatureSensor();
+      temperature.setValue(tempReading);
+      // set phSensor values
+      float phReading = getValuePHSensor(tempReading);
+      phSensor.setValue(phReading);
+      // set tdsSensor value
+      float tdsReading = getTDSValue(tempReading);
+      tdsSensor.setValue(tdsReading);
+      // set ecSensor value
+      float ecReading = getECValue(tempReading);
+      ecSensor.setValue(ecReading);
+      // set tankLevelSensor value
+      int levelReading = digitalRead(LEVELPIN);
+      tnakLevelSensor.setState(levelReading);
+    }
     // reset loop timer
     lastUpdateAt = millis();
   }
