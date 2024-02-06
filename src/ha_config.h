@@ -20,7 +20,12 @@ Sensor pin settings
 #define ECPIN A3  // semsors[3]
 #define TEMPPIN 2 // semsors[4]
 #define LEVELPIN 3
-#define RELAYPIN 4 ??? // not used
+#define A1SOLUTION 7 
+#define A2SOLUTION 8
+#define PHUP_SOLUTION 4
+#define PHDOWN_SOLUTION 5 
+
+#define PUMP_RUNTIME 5000
 
 // EC sesor values
 #define EEPROM_write(address, p) {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) EEPROM.write(address+i, pp[i]);}

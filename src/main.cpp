@@ -53,12 +53,18 @@ HASensorNumber tdsSensor("TDS", HASensorNumber::PrecisionP1);
 HASensorNumber ecSensor("EC", HASensorNumber::PrecisionP2);
 // setup tankLevelSensor
 HABinarySensor tnakLevelSensor("TankLevel");
+// setup the buttons for the pumps
+HASwitch a1Pump("A1-PUMP");
+HASwitch a2Pump("A2-PUMP");
+HASwitch phUpPump("PH-UP-PUMP");
+HASwitch phDownPump("PH-DOWN-PUMP");
+
+// ==================== END OF THE SENSOR DEFINITiON ====================
+// This it the last time the sensors were updated
 unsigned long lastUpdateAt = 0;
-// ==================== END OF THE DEVICE DEFINITiON ====================
 
 float getECValue(float temperature)
 {
-
   float _temperatureValue = temperature ? temperature : _temperature;
   float voltage = analogRead(ECPIN) / 1024.0 * 5000; // read the voltage (From https://github.com/DFRobot/DFRobot_EC/blob/master/example/DFRobot_EC_Test/DFRobot_EC_Test.ino)
   DEBUG_PRINT("rawECVoltage: ");
@@ -162,6 +168,96 @@ double getValueTemperatureSensor()
   return TemperatureSum;
 }
 
+/**
+ * @brief  This function is used to control the pump
+ * @param myswitch The switch that is being controlled
+ * @param state The state of the switch
+ * @param mcuPin The pin that the pump is connected to
+*/
+void switchControl( HASwitch myswitch, bool state, int mcuPin)
+{
+  if (state) // HA said turn on
+  {
+    Serial.print("Turning ON Switch: ");
+    Serial.println(myswitch.getName());
+    Serial.print("Setting Switch state: (1=ON=HIGH=TRUE) ");
+    Serial.println(state);
+    digitalWrite(mcuPin, LOW);
+    myswitch.setState(state);
+    delay(PUMP_RUNTIME);
+    Serial.print("Turning OFF Switch: ");
+    Serial.println(myswitch.getName());
+    Serial.print("Setting Switch state: (0=OFF=LOW=FALSE) ");
+    Serial.println(state);
+
+    digitalWrite(mcuPin, HIGH);
+    myswitch.setState(LOW);
+  }
+  else // off
+  {
+    Serial.print("Turning OFF Switch: ");
+    Serial.println(myswitch.getName());
+    Serial.print("Setting Switch state: (0=OFF=LOW=FALSE) ");
+    Serial.println(state);
+    digitalWrite(mcuPin, HIGH);
+    myswitch.setState(LOW);
+  }
+}
+
+
+/**
+ * @brief  This function is used to handle the switch commands from the Home Assistant
+ * @param state The state of the switch
+ * @param sender is a pointer to the switch that sent the command
+ * When 1 comes in the state is ON and when 0 comes in the state is OFF
+ */
+void onSwitchCommand(bool state, HASwitch *sender)
+{
+  if (state) // 1=ON in HA
+  {
+    sender->setState(state); // report state back to the Home Assistant
+    if (sender == &a1Pump)
+    {
+      switchControl(a1Pump, state, A1SOLUTION);
+    }
+    else if (sender == &a2Pump)
+    {
+      switchControl(a2Pump, state, A2SOLUTION);
+    }
+    else if (sender == &phUpPump)
+    {
+      switchControl(phUpPump, state, PHUP_SOLUTION);
+    }
+    else if (sender == &phDownPump)
+    {
+      switchControl(phDownPump, state, PHDOWN_SOLUTION);
+    }
+    else
+    {
+      Serial.println("Unknown switch");
+    }
+  }
+  else
+  {
+    // turn off the pump
+    if (sender == &a1Pump)
+    {
+      switchControl(a1Pump, state, A1SOLUTION);
+    }
+    else if (sender == &a2Pump)
+    {
+      switchControl(a2Pump, state, A2SOLUTION);
+    }
+    else if (sender == &phUpPump)
+    {
+      switchControl(phUpPump, state, PHUP_SOLUTION);
+    }
+    else if (sender == &phDownPump)
+    {
+      switchControl(phDownPump, state, PHDOWN_SOLUTION);
+    }
+  } // state on - off
+} // swtich callback
 /**
  *  @brief  This function is used to get the pH value from the pH sensor.
  */
@@ -291,6 +387,38 @@ void setup()
   tnakLevelSensor.setName("Tank Level");
   tnakLevelSensor.setDeviceClass("moisture");
   pinMode(LEVELPIN, INPUT);
+
+  // setup the buttons for the pumps
+  a1Pump.setIcon("mdi:water");
+  a1Pump.setName("A1 Pump");
+  a1Pump.setDeviceClass("switch");
+  switchControl(a1Pump, false, A1SOLUTION);
+  // handle switch state callback
+  a1Pump.onCommand(onSwitchCommand);
+
+  // setup the buttons for the pumps
+  a2Pump.setIcon("mdi:water");
+  a2Pump.setName("A2 Pump");
+  a2Pump.setDeviceClass("switch");
+  switchControl(a2Pump, false, A2SOLUTION);
+  // handle switch state callback
+  a2Pump.onCommand(onSwitchCommand);
+  // setup the buttons for the pumps
+  
+  phUpPump.setIcon("mdi:water");
+  phUpPump.setName("pH UP Pump");
+  phUpPump.setDeviceClass("switch");
+  switchControl(phUpPump, false, PHUP_SOLUTION);
+  // handle switch state callback
+  phUpPump.onCommand(onSwitchCommand);
+  // setup the buttons for the pumps
+  phDownPump.setIcon("mdi:water");
+  phDownPump.setName("pH Down Pump");
+  phDownPump.setDeviceClass("switch");
+  switchControl(phDownPump, false, PHDOWN_SOLUTION);
+  // handle switch state callback
+  phDownPump.onCommand(onSwitchCommand);
+
   // start the mqtt broker connection
   mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
 }
