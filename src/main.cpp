@@ -104,8 +104,12 @@ float getECValue(float temperature)
 double getTDSValue(float temperature)
 {
   float rawReadVoltage = analogRead(TDSPIN);
+  DEBUG_PRINT("TDS rawReadVoltage: ");
+  DEBUG_PRINTLN(rawReadVoltage);
   // calculate the average value of the sensor since we started
   averageTDSVoltage = (averageTDSVoltage + rawReadVoltage) / readCount;
+  DEBUG_PRINT("TDS averageTDSVoltage: ");
+  DEBUG_PRINTLN(averageTDSVoltage);
   // temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
   float compensationCoefficient = 1.0 + 0.02 * (temperature - 25.0);
   // temperature compensation
