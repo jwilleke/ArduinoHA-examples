@@ -1,0 +1,17 @@
+# Just temp notes
+
+pinMode(dpin, OUTPUT);
+
+0 = ON = LOW = FALSE = VOLTAGE on Pin
+1 = OFF = HIGH = TRUE = NO VOLTAGE
+07:48:22.947 -> Pin Mode is: INPUT
+07:48:22.947 -> 0 ON
+07:48:33.398 -> 1 OFF  HIGH TRUE
+
+07:50:07.444 -> Pin Mode is: INPUT_PULLUP
+07:50:07.444 -> 0 ON (LOW)
+07:50:17.892 -> 1 OFF (HIGH)
+
+07:51:51.920 -> Pin Mode is: INPUT_PULLDOWN
+07:51:51.920 -> 0 ON
+07:52:02.366 -> 1 OFF

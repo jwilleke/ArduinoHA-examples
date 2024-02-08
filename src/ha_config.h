@@ -20,12 +20,20 @@ Sensor pin settings
 #define ECPIN A3  // semsors[3]
 #define TEMPPIN 2 // semsors[4]
 #define LEVELPIN 3
-#define A1SOLUTION 7 
-#define A2SOLUTION 8
-#define PHUP_SOLUTION 4
-#define PHDOWN_SOLUTION 5 
 
-#define PUMP_RUNTIME 5000
+// Digital I/O pin settings for the pumps fans and valves
+//Relay 1
+#define PHUP_SOLUTION_PUMP 4
+#define PHDOWN_SOLUTION_PUMP 5
+//Relay 2
+#define A1SOLUTION_PUMP 6
+#define A2SOLUTION_PUMP 7
+//Relay 3 (Two STIRERs on each set of relay contacts)
+#define SOLUTION_STIRER_1 8
+#define SOLUTION_STIRER_2 9
+
+
+#define PUMP_RUNTIME 20000
 
 // EC sesor values
 #define EEPROM_write(address, p) {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) EEPROM.write(address+i, pp[i]);}
