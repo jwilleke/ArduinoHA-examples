@@ -9,6 +9,9 @@
 #define ANALOG_SUPPLY_VOLTAGE 5.0
 #define BROKER_ADDR IPAddress(192, 168, 68, 20)
 
+
+#define MQTT_SENSOR_COUNT 20
+
 /*
 Hardware ping addreses
 Sensor pin settings

@@ -34,8 +34,8 @@ HADevice device(myId, sizeof(myId));
 
 WiFiClient wifiClient;
 
-// assign the device and the sensor to the MQTT client and make the max number of sensors 12
-HAMqtt mqtt(wifiClient, device, 12);
+// assign the device and the sensor to the MQTT client and make the max number of sensors 
+HAMqtt mqtt(wifiClient, device, MQTT_SENSOR_COUNT);
 
 // ==================== SENSOR SENSOR DEFINITiON ====================
 // A sensor is a prt of this device that measures a physical quantity and converts it into a signal
@@ -58,6 +58,8 @@ HASwitch a1Pump("A1-PUMP");
 HASwitch a2Pump("A2-PUMP");
 HASwitch phUpPump("PH-UP-PUMP");
 HASwitch phDownPump("PH-DOWN-PUMP");
+HASwitch stirer1("STIRER-1");
+HASwitch stirer2("STIRER-2");
 
 // This it the last time the sensors were updated
 unsigned long lastUpdateAt = 0;
@@ -179,6 +181,7 @@ double getValueTemperatureSensor()
  */
 void switchControl(HASwitch myswitch, bool state, int mcuPin)
 {
+  DEBUG_PRINTLN("In Call back switchControl");
   if (state) // HA said turn on
   {
     DEBUG_PRINT("Turning ON Switch: ");
@@ -233,6 +236,14 @@ void onSwitchCommand(bool state, HASwitch *sender)
     {
       switchControl(phDownPump, state, PHDOWN_SOLUTION_PUMP);
     }
+    else if(sender == &stirer1)
+    {
+      switchControl(stirer1, state, SOLUTION_STIRER_1);
+    }
+    else if(sender == &stirer2)
+    {
+      switchControl(stirer2, state, SOLUTION_STIRER_2);
+    }
     else
     {
       Serial.println("Unknown switch");
@@ -257,8 +268,21 @@ void onSwitchCommand(bool state, HASwitch *sender)
     {
       switchControl(phDownPump, state, PHDOWN_SOLUTION_PUMP);
     }
+    else if(sender == &stirer1)
+    {
+      switchControl(stirer1, state, SOLUTION_STIRER_1);
+    }
+    else if(sender == &stirer2)
+    {
+      switchControl(stirer2, state, SOLUTION_STIRER_2);
+    }
+    else
+    {
+      Serial.println("Unknown switch");
+    }
   } // state on - off
-} // swtich callback
+} // end swtich callback
+
 /**
  *  @brief  This function is used to get the pH value from the pH sensor.
  */
@@ -336,10 +360,13 @@ void setup()
 
   // ==================== END OF THE SENSOR DEFINITiON ====================
   // Keep in mind the pull-up means the pushbutton's logic is inverted - goes HIGH when it's open, and LOW when CLOSED
-  pinMode(A1SOLUTION_PUMP, INPUT_PULLUP);
-  pinMode(A2SOLUTION_PUMP, INPUT_PULLUP);
-  pinMode(PHUP_SOLUTION_PUMP, INPUT_PULLUP);
-  pinMode(PHDOWN_SOLUTION_PUMP, INPUT_PULLUP);
+  pinMode(A1SOLUTION_PUMP, OUTPUT);
+  pinMode(A2SOLUTION_PUMP, OUTPUT);
+  pinMode(PHUP_SOLUTION_PUMP, OUTPUT);
+  pinMode(PHDOWN_SOLUTION_PUMP, OUTPUT);
+  pinMode(SOLUTION_STIRER_1, OUTPUT);
+  pinMode(SOLUTION_STIRER_2, OUTPUT);
+
   
   // ==================== Setup Action Pins ====================
   // WiFi.config(ip, gateway, subnet);
@@ -427,49 +454,60 @@ void setup()
   switchControl(phDownPump, false, PHDOWN_SOLUTION_PUMP);
   // handle switch state callback
   phDownPump.onCommand(onSwitchCommand);
-
+  // setup the buttons for the pumps
+  stirer1.setIcon("mdi:water");
+  stirer1.setName("Stirer 1");
+  stirer1.setDeviceClass("switch");
+  switchControl(stirer1, false, SOLUTION_STIRER_1);
+  // handle switch state callback
+  stirer1.onCommand(onSwitchCommand);
+  // setup the buttons for the pumps
+  stirer2.setIcon("mdi:water");
+  stirer2.setName("Stirer 2");
+  stirer2.setDeviceClass("switch");
+  switchControl(stirer2, false, SOLUTION_STIRER_2);
+  // handle switch state callback
+  stirer2.onCommand(onSwitchCommand);
   // start the mqtt broker connection
   mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
 }
 
 void loop()
 {
-  if (exitApp)
-  {
-    Serial.println("Entering empty Loop forever...");
-    mqtt.disconnect();
-    while (true)
-    {
-    };
-  }
   // Ethernet.maintain();
   mqtt.loop();
 
-    Serial.print(A1SOLUTION_PUMP ? HIGH : LOW);
   // update the sensor values every 2s
   if ((millis() - lastUpdateAt) > 2000)
   { // update in 2s interval
     // unsigned long uptimeValue = millis() / 1000;
+    DEBUG_PRINTLN("Updating sensor value for uptimeSensor");
     readCount++;
     uptimeSensor.setValue(readCount);
     // ignore the imitial readings as it takes time for the sensors to stabilize
     if (readCount > 10)
     {
+      DEBUG_PRINTLN("Updating sensor value for orbSensor");
       // set orbSensor value
       uint16_t reading = analogRead(ORPPIN);
       orbSensor.setValue(reading);
+      DEBUG_PRINTLN("Updating sensor value for temperature");
       // set temperature value
       float tempReading = getValueTemperatureSensor();
       temperature.setValue(tempReading);
+      DEBUG_PRINTLN("Updating sensor value for phSensor");
       // set phSensor values
       float phReading = getValuePHSensor(tempReading);
       phSensor.setValue(phReading);
+      DEBUG_PRINTLN("Updating sensor value for tdsSensor");
       // set tdsSensor value
       float tdsReading = getTDSValue(tempReading);
       tdsSensor.setValue(tdsReading);
+      DEBUG_PRINTLN("Updating sensor value for ecSensor");
       // set ecSensor value
       float ecReading = getECValue(tempReading);
       ecSensor.setValue(ecReading);
+      DEBUG_PRINTLN("Updating sensor value for tnakLevelSensor");
       // set tankLevelSensor value
       int levelReading = digitalRead(LEVELPIN);
       tnakLevelSensor.setState(levelReading);
