@@ -7,7 +7,7 @@
 #define SERIAL_BAUD_RATE 115200
 
 #define ANALOG_SUPPLY_VOLTAGE 5.0
-#define BROKER_ADDR IPAddress(192, 168, 68, 20)
+#define BROKER_ADDR IPAddress(192, 168, 68, 122)
 
 
 #define MQTT_SENSOR_COUNT 20
@@ -26,14 +26,14 @@ Sensor pin settings
 
 // Digital I/O pin settings for the pumps fans and valves
 //Relay 1
-#define PHUP_SOLUTION_PUMP 4
-#define PHDOWN_SOLUTION_PUMP 5
+#define PHUP_SOLUTION_PUMP 8
+#define PHDOWN_SOLUTION_PUMP 9
 //Relay 2
-#define A1SOLUTION_PUMP 6
-#define A2SOLUTION_PUMP 7
+#define A1SOLUTION_PUMP 10
+#define A2SOLUTION_PUMP 11
 //Relay 3 (Two STIRERs on each set of relay contacts)
-#define SOLUTION_STIRER_1 8
-#define SOLUTION_STIRER_2 9
+#define SOLUTION_STIRER_1 12
+#define SOLUTION_STIRER_2 13
 
 
 #define PUMP_RUNTIME 20000

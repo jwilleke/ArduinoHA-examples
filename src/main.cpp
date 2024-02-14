@@ -34,7 +34,7 @@ HADevice device(myId, sizeof(myId));
 
 WiFiClient wifiClient;
 
-// assign the device and the sensor to the MQTT client and make the max number of sensors 
+// assign the device and the sensor to the MQTT client and make the max number of sensors
 HAMqtt mqtt(wifiClient, device, MQTT_SENSOR_COUNT);
 
 // ==================== SENSOR SENSOR DEFINITiON ====================
@@ -178,345 +178,338 @@ double getValueTemperatureSensor()
  * @param myswitch The switch that is being controlled
  * @param state The state of the switch
  * @param mcuPin The pin that the pump is connected to
+ * ture turns on the pump pin and false turns pin off
+ * ture turns HA off and false turns HA on
  */
-void switchControl(HASwitch myswitch, bool state, int mcuPin)
+void switchControl(String switchName, bool state, int mcuPin)
 {
   DEBUG_PRINTLN("In Call back switchControl");
   if (state) // HA said turn on
   {
-    DEBUG_PRINT("Turning ON Switch: ");
-    DEBUG_PRINTLN(myswitch.getName());
-    DEBUG_PRINT("Setting Switch state: (1=ON=HIGH=TRUE) ");
+    DEBUG_PRINT("==> Turning ON: ");
+    DEBUG_PRINTLN(switchName);
+    DEBUG_PRINT("==> Setting state: (1=ON=HIGH=TRUE) ");
     DEBUG_PRINTLN(state);
-    digitalWrite(mcuPin, LOW);
-    myswitch.setState(state);
-    delay(PUMP_RUNTIME);
-    DEBUG_PRINT("Turning OFF Switch: ");
-    DEBUG_PRINTLN(myswitch.getName());
-    DEBUG_PRINT("Setting Switch state: (0=OFF=LOW=FALSE) ");
-    DEBUG_PRINTLN(state);
-    digitalWrite(mcuPin, HIGH);
-    myswitch.setState(LOW);
   }
   else // off
   {
-    DEBUG_PRINT("Turning OFF Switch: ");
-    DEBUG_PRINTLN(myswitch.getName());
-    DEBUG_PRINT("Setting Switch state: (0=OFF=LOW=FALSE) ");
+    DEBUG_PRINT("==> Turning OFF: ");
+    DEBUG_PRINTLN(switchName);
+    DEBUG_PRINT("==> Setting state: (0=OFF=LOW=FALSE) ");
     DEBUG_PRINTLN(state);
-    digitalWrite(mcuPin, HIGH);
-    myswitch.setState(LOW);
   }
-}
 
-/**
- * @brief  This function is used to handle the switch commands from the Home Assistant
- * @param state The state of the switch
- * @param sender is a pointer to the switch that sent the command
- * When 1 comes in the state is ON and when 0 comes in the state is OFF
- */
-void onSwitchCommand(bool state, HASwitch *sender)
-{
-  if (state) // 1=ON in HA
+  if (switchName == a1Pump.getName())
   {
-    sender->setState(state); // report state back to the Home Assistant
-    if (sender == &a1Pump)
-    {
-      switchControl(a1Pump, state, A1SOLUTION_PUMP);
-    }
-    else if (sender == &a2Pump)
-    {
-      switchControl(a2Pump, state, A2SOLUTION_PUMP);
-    }
-    else if (sender == &phUpPump)
-    {
-      switchControl(phUpPump, state, PHUP_SOLUTION_PUMP);
-    }
-    else if (sender == &phDownPump)
-    {
-      switchControl(phDownPump, state, PHDOWN_SOLUTION_PUMP);
-    }
-    else if(sender == &stirer1)
-    {
-      switchControl(stirer1, state, SOLUTION_STIRER_1);
-    }
-    else if(sender == &stirer2)
-    {
-      switchControl(stirer2, state, SOLUTION_STIRER_2);
-    }
-    else
-    {
-      Serial.println("Unknown switch");
-    }
+    digitalWrite(A1SOLUTION_PUMP, !state);
+    a1Pump.setState(state); // report state back to the Home Assistant
+  }
+  else if (switchName == a2Pump.getName())
+  {
+    digitalWrite(A2SOLUTION_PUMP, !state);
+    a2Pump.setState(state); // report state back to the Home Assistant
+  }
+  else if (switchName == phUpPump.getName())
+  {
+    digitalWrite(PHUP_SOLUTION_PUMP, !state);
+    phUpPump.setState(state); // report state back to the Home Assistant
+  }
+  else if (switchName == phDownPump.getName())
+  {
+    digitalWrite(PHDOWN_SOLUTION_PUMP, !state);
+    phDownPump.setState(state); // report state back to the Home Assistant
+  }
+  else if (switchName == stirer1.getName())
+  {
+    digitalWrite(SOLUTION_STIRER_1, !state);
+    stirer1.setState(state); // report state back to the Home Assistant
+  }
+  else if (switchName == stirer2.getName())
+  {
+    digitalWrite(SOLUTION_STIRER_2, !state);
+    stirer2.setState(state); // report state back to the Home Assistant
   }
   else
   {
-    // turn off the pump
+    Serial.println("Unknown switch");
+  }
+}
+  /**
+   * @brief  This function is used to handle the switch commands from the Home Assistant
+   * @param state The state of the switch
+   * @param sender is a pointer to the switch that sent the command
+   * When 1 comes in the state is ON and when 0 comes in the state is OFF
+   */
+  void onSwitchCommand(bool state, HASwitch *sender)
+  {
+    // sender->setState(state); // report state back to the Home Assistant
     if (sender == &a1Pump)
     {
-      switchControl(a1Pump, state, A1SOLUTION_PUMP);
+      switchControl(a1Pump.getName(), state, A1SOLUTION_PUMP);
     }
     else if (sender == &a2Pump)
     {
-      switchControl(a2Pump, state, A2SOLUTION_PUMP);
+      switchControl(a2Pump.getName(), state, A2SOLUTION_PUMP);
     }
     else if (sender == &phUpPump)
     {
-      switchControl(phUpPump, state, PHUP_SOLUTION_PUMP);
+      switchControl(phUpPump.getName(), state, PHUP_SOLUTION_PUMP);
     }
     else if (sender == &phDownPump)
     {
-      switchControl(phDownPump, state, PHDOWN_SOLUTION_PUMP);
+      switchControl(phDownPump.getName(), state, PHDOWN_SOLUTION_PUMP);
     }
-    else if(sender == &stirer1)
+    else if (sender == &stirer1)
     {
-      switchControl(stirer1, state, SOLUTION_STIRER_1);
+      switchControl(stirer1.getName(), state, SOLUTION_STIRER_1);
     }
-    else if(sender == &stirer2)
+    else if (sender == &stirer2)
     {
-      switchControl(stirer2, state, SOLUTION_STIRER_2);
+      switchControl(stirer2.getName(), state, SOLUTION_STIRER_2);
     }
     else
     {
       Serial.println("Unknown switch");
     }
-  } // state on - off
-} // end swtich callback
+  } // end swtich callback
 
-/**
- *  @brief  This function is used to get the pH value from the pH sensor.
- */
-double getValuePHSensor(float temperature)
-{
-
-  double temp = temperature ? temperature : _temperature;
-  float rawReadVoltage = analogRead(PHPIN);
-  DEBUG_PRINT("rawReadVoltage: ");
-  DEBUG_PRINTLN(rawReadVoltage);
-  float slope = (7.0 - 4.0) / ((_neutralVoltage - 1500.0) / 3.0 - (_acidVoltage - 1500.0) / 3.0);
-  float intercept = 7.0 - slope * (_neutralVoltage - 1500.0) / 3.0;
-  float _phValue = slope * (rawReadVoltage - 1500.0) / 3.0 + intercept; // y = k*x + b
-
-  //* ANALOG_SUPPLY_VOLTAGE / 1023;
-  DEBUG_PRINT("pH Value: ");
-  DEBUG_PRINTLN(_phValue);
-  return _phValue;
-}
-
-/**
- *
- */
-
-void printByetArray(byte mac[], int len)
-{
-  for (int i = len; i > 0; i--)
+  /**
+   *  @brief  This function is used to get the pH value from the pH sensor.
+   */
+  double getValuePHSensor(float temperature)
   {
-    if (mac[i] < 16)
-    {
-      Serial.print("0");
-    }
-    Serial.print(mac[i], HEX);
-    if (i > 1)
-    {
-      Serial.print(":");
-    }
+
+    double temp = temperature ? temperature : _temperature;
+    float rawReadVoltage = analogRead(PHPIN);
+    DEBUG_PRINT("rawReadVoltage: ");
+    DEBUG_PRINTLN(rawReadVoltage);
+    float slope = (7.0 - 4.0) / ((_neutralVoltage - 1500.0) / 3.0 - (_acidVoltage - 1500.0) / 3.0);
+    float intercept = 7.0 - slope * (_neutralVoltage - 1500.0) / 3.0;
+    float _phValue = slope * (rawReadVoltage - 1500.0) / 3.0 + intercept; // y = k*x + b
+
+    //* ANALOG_SUPPLY_VOLTAGE / 1023;
+    DEBUG_PRINT("pH Value: ");
+    DEBUG_PRINTLN(_phValue);
+    return _phValue;
   }
-  Serial.println();
-}
 
-void printCurrentNet()
-{
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
+  /**
+   *
+   */
 
-  // print the MAC address of SSID you're attached to:
-  byte bssid[6];
-  WiFi.BSSID(bssid);
-  Serial.print("BSSID: ");
-  printByetArray(bssid, 6);
-
-  Serial.print("MAC: ");
-  printByetArray(myId, sizeof(myId));
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI): ");
-  Serial.println(rssi);
-
-  // print the encryption type:
-  byte encryption = WiFi.encryptionType();
-  Serial.print("Encryption Type: ");
-  Serial.println(encryption, HEX);
-  Serial.println();
-} // end printCurrentNet
-
-void setup()
-{
-  // DEBUG_INIT();
-  Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Starting setup...");
-  Serial.println("DNS and DHCP-based web client test 2024-02-04"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
-
-  // ==================== END OF THE SENSOR DEFINITiON ====================
-  // Keep in mind the pull-up means the pushbutton's logic is inverted - goes HIGH when it's open, and LOW when CLOSED
-  pinMode(A1SOLUTION_PUMP, OUTPUT);
-  pinMode(A2SOLUTION_PUMP, OUTPUT);
-  pinMode(PHUP_SOLUTION_PUMP, OUTPUT);
-  pinMode(PHDOWN_SOLUTION_PUMP, OUTPUT);
-  pinMode(SOLUTION_STIRER_1, OUTPUT);
-  pinMode(SOLUTION_STIRER_2, OUTPUT);
-
-  
-  // ==================== Setup Action Pins ====================
-  // WiFi.config(ip, gateway, subnet);
-  WiFi.begin(ssid, pass);
-  while (WiFi.status() != WL_CONNECTED)
+  void printByetArray(byte mac[], int len)
   {
-    Serial.print(".");
-    delay(500); // waiting for the connection
-  }
-  Serial.println();
-  Serial.println("Connected to the network");
-  printCurrentNet();
-
-  // set device's details (optional)
-  device.setSoftwareVersion("1.0.0");
-  device.setManufacturer("arduino");
-  device.setModel("uno_r4_wifi");
-  device.setName(deviceName);
-  // ...
-  device.enableSharedAvailability();
-  // device.setAvailability(false); // changes default state to offline
-  //  MQTT LWT (Last Will and Testament) is a feature of the MQTT protocol that allows a client to notify the broker of an ungracefully disconnected client.
-  device.enableLastWill();
-  // Discovery prefix is used to build the MQTT topic for the discovery messages.
-  mqtt.setDiscoveryPrefix("homeassistant"); // this is the default value
-  mqtt.setDataPrefix("aha");                // this is the default value
-
-  // configure sensor (optional)
-  uptimeSensor.setIcon("mdi:mdi-av-timer");
-  uptimeSensor.setName("ReadCount");
-  uptimeSensor.setUnitOfMeasurement("#");
-  // orbSensor.setIcon("mdi:home");
-  orbSensor.setIcon("mdi:current-dc");
-  orbSensor.setName("ORB");
-  orbSensor.setUnitOfMeasurement("mv");
-  // setup phSensor
-  phSensor.setIcon("mdi:oil-temperature");
-  phSensor.setName("pH");
-  phSensor.setUnitOfMeasurement("pH");
-  // setup the device
-  temperature.setIcon("mdi:thermometer");
-  temperature.setName("Temperature");
-  temperature.setUnitOfMeasurement("°C");
-  // setup the tdsSensor
-  tdsSensor.setIcon("mdi:water");
-  tdsSensor.setName("TDS");
-  tdsSensor.setUnitOfMeasurement("ppm");
-  // setup the ecSensor
-  ecSensor.setIcon("mdi:water");
-  ecSensor.setName("EC");
-  ecSensor.setUnitOfMeasurement("ms/cm");
-  // setup the tankLevelSensor
-  tnakLevelSensor.setIcon("mdi:water");
-  tnakLevelSensor.setName("Tank Level");
-  tnakLevelSensor.setDeviceClass("moisture");
-  pinMode(LEVELPIN, INPUT);
-
-  // setup the buttons for the pumps
-  a1Pump.setIcon("mdi:water");
-  a1Pump.setName("A1 Pump");
-  a1Pump.setDeviceClass("switch");
-  switchControl(a1Pump, false, A1SOLUTION_PUMP);
-  // handle switch state callback
-  a1Pump.onCommand(onSwitchCommand);
-
-  // setup the buttons for the pumps
-  a2Pump.setIcon("mdi:water");
-  a2Pump.setName("A2 Pump");
-  a2Pump.setDeviceClass("switch");
-  switchControl(a2Pump, false, A2SOLUTION_PUMP);
-  // handle switch state callback
-  a2Pump.onCommand(onSwitchCommand);
-  // setup the buttons for the pumps
-
-  phUpPump.setIcon("mdi:water");
-  phUpPump.setName("pH UP Pump");
-  phUpPump.setDeviceClass("switch");
-  switchControl(phUpPump, false, PHUP_SOLUTION_PUMP);
-  // handle switch state callback
-  phUpPump.onCommand(onSwitchCommand);
-  // setup the buttons for the pumps
-  phDownPump.setIcon("mdi:water");
-  phDownPump.setName("pH Down Pump");
-  phDownPump.setDeviceClass("switch");
-  switchControl(phDownPump, false, PHDOWN_SOLUTION_PUMP);
-  // handle switch state callback
-  phDownPump.onCommand(onSwitchCommand);
-  // setup the buttons for the pumps
-  stirer1.setIcon("mdi:water");
-  stirer1.setName("Stirer 1");
-  stirer1.setDeviceClass("switch");
-  switchControl(stirer1, false, SOLUTION_STIRER_1);
-  // handle switch state callback
-  stirer1.onCommand(onSwitchCommand);
-  // setup the buttons for the pumps
-  stirer2.setIcon("mdi:water");
-  stirer2.setName("Stirer 2");
-  stirer2.setDeviceClass("switch");
-  switchControl(stirer2, false, SOLUTION_STIRER_2);
-  // handle switch state callback
-  stirer2.onCommand(onSwitchCommand);
-  // start the mqtt broker connection
-  mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
-}
-
-void loop()
-{
-  // Ethernet.maintain();
-  mqtt.loop();
-
-  // update the sensor values every 2s
-  if ((millis() - lastUpdateAt) > 2000)
-  { // update in 2s interval
-    // unsigned long uptimeValue = millis() / 1000;
-    DEBUG_PRINTLN("Updating sensor value for uptimeSensor");
-    readCount++;
-    uptimeSensor.setValue(readCount);
-    // ignore the imitial readings as it takes time for the sensors to stabilize
-    if (readCount > 10)
+    for (int i = len; i > 0; i--)
     {
-      DEBUG_PRINTLN("Updating sensor value for orbSensor");
-      // set orbSensor value
-      uint16_t reading = analogRead(ORPPIN);
-      orbSensor.setValue(reading);
-      DEBUG_PRINTLN("Updating sensor value for temperature");
-      // set temperature value
-      float tempReading = getValueTemperatureSensor();
-      temperature.setValue(tempReading);
-      DEBUG_PRINTLN("Updating sensor value for phSensor");
-      // set phSensor values
-      float phReading = getValuePHSensor(tempReading);
-      phSensor.setValue(phReading);
-      DEBUG_PRINTLN("Updating sensor value for tdsSensor");
-      // set tdsSensor value
-      float tdsReading = getTDSValue(tempReading);
-      tdsSensor.setValue(tdsReading);
-      DEBUG_PRINTLN("Updating sensor value for ecSensor");
-      // set ecSensor value
-      float ecReading = getECValue(tempReading);
-      ecSensor.setValue(ecReading);
-      DEBUG_PRINTLN("Updating sensor value for tnakLevelSensor");
-      // set tankLevelSensor value
-      int levelReading = digitalRead(LEVELPIN);
-      tnakLevelSensor.setState(levelReading);
+      if (mac[i] < 16)
+      {
+        Serial.print("0");
+      }
+      Serial.print(mac[i], HEX);
+      if (i > 1)
+      {
+        Serial.print(":");
+      }
     }
-    // reset loop timer
-    lastUpdateAt = millis();
+    Serial.println();
   }
 
-  // You can also change the state at runtime as shown below.
-  // This kind of logic can be used if you want to control your light using a button connected to the device.
-  // light.setState(true); // use any state you want
-}
+  void printCurrentNet()
+  {
+    // print the SSID of the network you're attached to:
+    Serial.print("SSID: ");
+    Serial.println(WiFi.SSID());
+
+    // print the MAC address of SSID you're attached to:
+    byte bssid[6];
+    WiFi.BSSID(bssid);
+    Serial.print("BSSID: ");
+    printByetArray(bssid, 6);
+
+    Serial.print("MAC: ");
+    printByetArray(myId, sizeof(myId));
+
+    // print the received signal strength:
+    long rssi = WiFi.RSSI();
+    Serial.print("signal strength (RSSI): ");
+    Serial.println(rssi);
+
+    // print the encryption type:
+    byte encryption = WiFi.encryptionType();
+    Serial.print("Encryption Type: ");
+    Serial.println(encryption, HEX);
+    Serial.println();
+  } // end printCurrentNet
+
+  void setup()
+  {
+    // DEBUG_INIT();
+    Serial.begin(SERIAL_BAUD_RATE);
+    Serial.println("Starting setup...");
+    Serial.println("DNS and DHCP-based web client test 2024-02-04"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+
+    // ==================== END OF THE SENSOR DEFINITiON ====================
+    // Keep in mind the pull-up means the pushbutton's logic is inverted - goes HIGH when it's open, and LOW when CLOSED
+    pinMode(A1SOLUTION_PUMP, OUTPUT);
+    pinMode(A2SOLUTION_PUMP, OUTPUT);
+    pinMode(PHUP_SOLUTION_PUMP, OUTPUT);
+    pinMode(PHDOWN_SOLUTION_PUMP, OUTPUT);
+    pinMode(SOLUTION_STIRER_1, OUTPUT);
+    pinMode(SOLUTION_STIRER_2, OUTPUT);
+
+    // ==================== Setup Action Pins ====================
+    // WiFi.config(ip, gateway, subnet);
+    WiFi.begin(ssid, pass);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print(".");
+      delay(500); // waiting for the connection
+    }
+    Serial.println();
+    Serial.println("Connected to the network");
+    printCurrentNet();
+
+    // set device's details (optional)
+    device.setSoftwareVersion("1.0.0");
+    device.setManufacturer("arduino");
+    device.setModel("uno_r4_wifi");
+    device.setName(deviceName);
+    // ...
+    device.enableSharedAvailability();
+    // device.setAvailability(false); // changes default state to offline
+    //  MQTT LWT (Last Will and Testament) is a feature of the MQTT protocol that allows a client to notify the broker of an ungracefully disconnected client.
+    device.enableLastWill();
+    // Discovery prefix is used to build the MQTT topic for the discovery messages.
+    mqtt.setDiscoveryPrefix("homeassistant"); // this is the default value
+    mqtt.setDataPrefix("aha");                // this is the default value
+
+    // configure sensor (optional)
+    uptimeSensor.setIcon("mdi:mdi-av-timer");
+    uptimeSensor.setName("ReadCount");
+    uptimeSensor.setUnitOfMeasurement("#");
+    // orbSensor.setIcon("mdi:home");
+    orbSensor.setIcon("mdi:current-dc");
+    orbSensor.setName("ORB");
+    orbSensor.setUnitOfMeasurement("mv");
+    // setup phSensor
+    phSensor.setIcon("mdi:ph");
+    phSensor.setName("pH");
+    phSensor.setUnitOfMeasurement("pH");
+    // setup the device
+    temperature.setIcon("mdi:thermometer");
+    temperature.setName("Temperature");
+    temperature.setUnitOfMeasurement("°C");
+    // setup the tdsSensor
+    tdsSensor.setIcon("mdi:chart-scatter-plot");
+    tdsSensor.setName("TDS");
+    tdsSensor.setUnitOfMeasurement("ppm");
+    // setup the ecSensor
+    ecSensor.setIcon("mdi:meter-electric");
+    ecSensor.setName("EC");
+    ecSensor.setUnitOfMeasurement("ms/cm");
+    // setup the tankLevelSensor
+    tnakLevelSensor.setIcon("mdi:gauge");
+    tnakLevelSensor.setName("Tank Level");
+    tnakLevelSensor.setDeviceClass("moisture");
+    pinMode(LEVELPIN, INPUT);
+    // setup the buttons for the pumps
+    a1Pump.setIcon("mdi:gas-station");
+    a1Pump.setName("A1 Pump");
+    a1Pump.setDeviceClass("switch");
+    switchControl(a1Pump.getName(), false, A1SOLUTION_PUMP);
+    // handle switch state callback
+    a1Pump.onCommand(onSwitchCommand);
+
+    // setup the buttons for the pumps
+    a2Pump.setIcon("mdi:gas-station");
+    a2Pump.setName("A2 Pump");
+    a2Pump.setDeviceClass("switch");
+    switchControl(a2Pump.getName(), false, A2SOLUTION_PUMP);
+    // handle switch state callback
+    a2Pump.onCommand(onSwitchCommand);
+    // setup the buttons for the pumps
+
+    phUpPump.setIcon("mdi:gas-station");
+    phUpPump.setName("pH UP Pump");
+    phUpPump.setDeviceClass("switch");
+    switchControl(phUpPump.getName(), false, PHUP_SOLUTION_PUMP);
+    // handle switch state callback
+    phUpPump.onCommand(onSwitchCommand);
+    // setup the buttons for the pumps
+    phDownPump.setIcon("mdi:gas-station");
+    phDownPump.setName("pH Down Pump");
+    phDownPump.setDeviceClass("switch");
+    // Turn OFF the pH Down pump
+    switchControl(phDownPump.getName(), false, PHDOWN_SOLUTION_PUMP);
+    // handle switch state callback
+    phDownPump.onCommand(onSwitchCommand);
+    // setup the buttons for the pumps
+    stirer1.setIcon("mdi:pot-mix");
+    stirer1.setName("Stirer 1");
+    stirer1.setDeviceClass("switch");
+    // Turn OFF the stirer1
+    switchControl(stirer1.getName(), false, SOLUTION_STIRER_1);
+    // handle switch state callback
+    stirer1.onCommand(onSwitchCommand);
+    // setup the buttons for the pumps
+    stirer2.setIcon("mdi:pot-mix");
+    stirer2.setName("Stirer 2");
+    stirer2.setDeviceClass("switch");
+    switchControl(stirer2.getName(), false, SOLUTION_STIRER_2);
+    // handle switch state callback
+    stirer2.onCommand(onSwitchCommand);
+    // start the mqtt broker connection
+    // mqtt.begin(BROKER_ADDR, mqttUser, mqttUserPass);
+    mqtt.begin(BROKER_ADDR);
+  }
+
+  void loop()
+  {
+    mqtt.loop();
+    //switchControl(stirer2.getName(), true, SOLUTION_STIRER_2);
+    //delay(10000);
+    //switchControl(stirer2.getName(), false, SOLUTION_STIRER_2);
+    //delay(10000);
+    // update the sensor values every 2s
+    if ((millis() - lastUpdateAt) > 2000)
+    { // update in 2s interval
+      // unsigned long uptimeValue = millis() / 1000;
+      DEBUG_PRINTLN("Updating sensor value for uptimeSensor");
+      readCount++;
+      uptimeSensor.setValue(readCount);
+      // ignore the imitial readings as it takes time for the sensors to stabilize
+      if (readCount > 1000)
+      {
+        DEBUG_PRINTLN("Updating sensor value for orbSensor");
+        // set orbSensor value
+        uint16_t reading = analogRead(ORPPIN);
+        orbSensor.setValue(reading);
+        DEBUG_PRINTLN("Updating sensor value for temperature");
+        // set temperature value
+        float tempReading = getValueTemperatureSensor();
+        temperature.setValue(tempReading);
+        DEBUG_PRINTLN("Updating sensor value for phSensor");
+        // set phSensor values
+        float phReading = getValuePHSensor(tempReading);
+        phSensor.setValue(phReading);
+        DEBUG_PRINTLN("Updating sensor value for tdsSensor");
+        // set tdsSensor value
+        float tdsReading = getTDSValue(tempReading);
+        tdsSensor.setValue(tdsReading);
+        DEBUG_PRINTLN("Updating sensor value for ecSensor");
+        // set ecSensor value
+        float ecReading = getECValue(tempReading);
+        ecSensor.setValue(ecReading);
+        DEBUG_PRINTLN("Updating sensor value for tnakLevelSensor");
+        // set tankLevelSensor value
+        int levelReading = digitalRead(LEVELPIN);
+        tnakLevelSensor.setState(levelReading);
+      }
+      // reset loop timer
+      lastUpdateAt = millis();
+    }
+
+    // You can also change the state at runtime as shown below.
+    // This kind of logic can be used if you want to control your light using a button connected to the device.
+    // light.setState(true); // use any state you want
+  }
