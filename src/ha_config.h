@@ -11,6 +11,7 @@
 
 #define MQTT_SENSOR_COUNT 20
 
+# define INITIAL_READER_COUNTER 100
 /*
 Hardware ping addreses
 Sensor pin settings

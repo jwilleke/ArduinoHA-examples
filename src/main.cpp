@@ -482,7 +482,7 @@ void loop()
     DEBUG_PRINTLN(readCount);
     uptimeSensor.setValue(readCount);
     // ignore the imitial readings as it takes time for the sensors to stabilize
-    if (readCount > 100)
+    if (readCount > INITIAL_READER_COUNTER )
     {
       DEBUG_PRINTLN("Updating sensor value for orbSensor");
       // set orbSensor value
