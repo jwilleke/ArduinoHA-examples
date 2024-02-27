@@ -10,6 +10,22 @@ The 1-Wire temperature sensors have become particularly popular, because they're
 
 ## 1-Wire Interfaces
 
+Here's a summary of why daisy chaining works with 1-wire:
+
+### Shared data line
+
+Unlike traditional communication protocols that require dedicated I/O pins for each device, 1-wire devices utilize a single data line for communication. This shared bus, called the 1-wire bus, allows connection of multiple devices to a single pin.
+
+### Unique addressing
+
+Each 1-wire device has a unique 64-bit address. This address enables the master device (like your Arduino) to identify and communicate with specific devices on the shared bus.
+
+### Master-slave communication
+
+The master device initiates communication by sending a command and specifying the desired address on the bus. Only the targeted device with the matching address responds, while other devices on the bus remain inactive. This ensures communication efficiency and avoids conflicts.
+
+Therefore, you can connect multiple compatible 1-wire devices in a daisy chain fashion to the same digital I/O pin. The code using the OneWire library can communicate with each device individually by addressing them on the shared bus.
+
 ### Dedicated Bus Controller
 
 Dallas/Maxim and a number of other companies manufacture dedicated bus controller for read/write and management of 1-Wire networks. Most of these are listed [here](http://owfs.org/index.php?page=bus-masters)

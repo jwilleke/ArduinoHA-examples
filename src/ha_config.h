@@ -9,7 +9,6 @@
 #define ANALOG_SUPPLY_VOLTAGE 5.0
 #define BROKER_ADDR IPAddress(192, 168, 68, 122)
 
-
 #define MQTT_SENSOR_COUNT 20
 
 /*
@@ -21,8 +20,8 @@ Sensor pin settings
 #define DOPIN A5  // not used but is ues in GravityDo,cpp
 #define ORPPIN A2 // semsors[2]
 #define ECPIN A3  // semsors[3]
-#define TEMPPIN 2 // semsors[4]
-#define LEVELPIN 3
+#define ONEWIREPIN 2 // The Digital I/O pin number for the one wire bus
+#define LEVELPIN 4
 
 // Digital I/O pin settings for the pumps fans and valves
 //Relay 1
@@ -34,7 +33,6 @@ Sensor pin settings
 //Relay 3 (Two STIRERs on each set of relay contacts)
 #define SOLUTION_STIRER_1 12
 #define SOLUTION_STIRER_2 13
-
 
 #define PUMP_RUNTIME 20000
 
