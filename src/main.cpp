@@ -104,11 +104,11 @@ float getECValue(float temperature)
 */
 double getTDSValue(float temperature)
 {
-  float rawReadVoltage = analogRead(TDSPIN);
-  DEBUG_PRINT("TDS rawReadVoltage: ");
-  DEBUG_PRINTLN(rawReadVoltage);
+  float rawTDSReadVoltage = analogRead(TDSPIN);
+  DEBUG_PRINT("TDS rawTDSReadVoltage: ");
+  DEBUG_PRINTLN(rawTDSReadVoltage);
   // calculate the average value of the sensor since we started
-  averageTDSVoltage = (averageTDSVoltage + rawReadVoltage) / readCount;
+  averageTDSVoltage = (averageTDSVoltage + rawTDSReadVoltage) / readCount;
   DEBUG_PRINT("TDS averageTDSVoltage: ");
   DEBUG_PRINTLN(averageTDSVoltage);
   // temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
@@ -134,19 +134,20 @@ double getValueTemperatureSensor()
   if (!ds.search(addr))
   {
     // no more sensors on chain, reset search
+    Serial.println("getValueTemperatureSensor: No more sensors on OneWire, reset search");
     ds.reset_search();
     return -1001;
   }
 
   if (OneWire::crc8(addr, 7) != addr[7])
   {
-    Serial.println("CRC is not valid!");
+    Serial.println("getValueTemperatureSensor: CRC is not valid!");
     return -1002;
   }
 
   if (addr[0] != 0x10 && addr[0] != 0x28)
   {
-    Serial.println("Device is not recognized");
+    Serial.println("getValueTemperatureSensor: Device is not recognized");
     return -1003;
   }
 
