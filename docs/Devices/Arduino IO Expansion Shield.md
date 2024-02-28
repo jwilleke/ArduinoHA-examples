@@ -1,4 +1,4 @@
-# Gravity: IO Expansion Shield for Arduino V7.1 SKU:DFR0265 Brand:DFRobot
+# Arduino IO Expansion Shield V7.1 SKU:DFR0265 Brand:DFRobot
 
 [IO Expansion Shield for Arduino V7.1 SKU:DFR0265 Brand:DFRobot](https://www.dfrobot.com/product-1009.html)
 
@@ -12,11 +12,9 @@ If you are worried about the chaotic tangle of wires on a breadboard or intimida
 
 ### Overview
 
-![Overview](/resources/DFR0762-IO-shield.png)
+![Overview](/resources/IO%20Expansion%20Shield%20V7-overview.png)
 
 ### FEATURES
-
-
 
 - 3.3V/5V operating voltage select
 - Switch for wireless communication & programme
@@ -61,9 +59,6 @@ Switch to RUN/PROG The new extension board adds a switch to Run and Download the
 
 ## Available Power Situations
 
-![Overview](/resources/DFR0762-IO-shield.png)
-
-
 ### Jumper 3.3V/5V
 
 VCC pin voltage is determined by Jumper to choose VCC pins is 5V or 3.3V. Makes it is easy to power sensors that require a 3.3V power supply. If there is no jumper cap, the VCC pin output voltage is 0.
@@ -80,9 +75,9 @@ External input power supply connected to PWR_IN can range from 6~12V.
 
 ### SERVO_PWR (5~12V)
 
-The power supply of the digital pin is connected to SERVO_PWR, and SERVO_PWR supplies 5~12V. After the servo power input interface is powered.
+The Independent Servo Power input of the digital pin is connected to SERVO_PWR, and SERVO_PWR supplies 5~12V. After the servo power input interface is powered.
 
-> SERVO_PWR will only power the D0 to D13 digital pin, but not the board.
+> SERVO_PWR will __only power the D0 to D13 digital pins__, but not the board.
 
 This allow more current to be supplied to the D0 to D13 digital pins when xexcessive use for motors etc.
 
