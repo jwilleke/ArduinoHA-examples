@@ -470,13 +470,14 @@ void setup()
 void loop()
 {
   mqtt.loop();
-  // switchControl(stirer2.getName(), true, SOLUTION_STIRER_2);
-  // delay(10000);
-  // switchControl(stirer2.getName(), false, SOLUTION_STIRER_2);
-  // delay(10000);
-  //  update the sensor values every 2s
+  /**
+   * @brief This is the time in milliseconds since the last time the sensors were updated.
+  */
   if ((millis() - lastUpdateAt) > THRESHOLD)
   { 
+    /**
+     * @brief Represents the uptime value in seconds.
+     */
     uint32_t uptimeValue = millis() / 1000;
     DEBUG_PRINT("Updating sensor value for uptimeSensor: ");
     readCount++;

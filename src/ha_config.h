@@ -11,7 +11,7 @@
 
 #define MQTT_SENSOR_COUNT 20
 
-# define INITIAL_READER_COUNTER 500
+# define INITIAL_READER_COUNTER 10
 #define THRESHOLD 2000      // CHANGE YOUR THRESHOLD HERE
 /*
 Hardware ping addreses
