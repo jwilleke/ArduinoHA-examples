@@ -346,11 +346,6 @@ void printCurrentNet()
 
 void setup()
 {
-  // DEBUG_INIT();
-  Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Starting setup...");
-  Serial.println("DNS and DHCP-based web client test 2024-02-04"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
-
   // ==================== END OF THE SENSOR DEFINITiON ====================
   // Keep in mind the pull-up means the pushbutton's logic is inverted - goes HIGH when it's open, and LOW when CLOSED
   pinMode(A1SOLUTION_PUMP, OUTPUT);
@@ -359,6 +354,12 @@ void setup()
   pinMode(PHDOWN_SOLUTION_PUMP, OUTPUT);
   pinMode(SOLUTION_STIRER_1, OUTPUT);
   pinMode(SOLUTION_STIRER_2, OUTPUT);
+
+  // DEBUG_INIT();
+  Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println("Starting setup...");
+  Serial.println("DNS and DHCP-based web client test 2024-02-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
+
 
   // ==================== Setup Action Pins ====================
   // WiFi.config(ip, gateway, subnet);
@@ -387,9 +388,9 @@ void setup()
   mqtt.setDataPrefix("aha");                // this is the default value
 
   // configure sensor (optional)
-  uptimeSensor.setIcon("mdi:mdi-av-timer");
-  uptimeSensor.setName("ReadCount");
-  uptimeSensor.setUnitOfMeasurement("#");
+  uptimeSensor.setIcon("mdi:timer");
+  uptimeSensor.setName("uptime");
+  uptimeSensor.setUnitOfMeasurement("s");
   // orbSensor.setIcon("mdi:home");
   orbSensor.setIcon("mdi:current-dc");
   orbSensor.setName("ORB");
@@ -474,13 +475,13 @@ void loop()
   // switchControl(stirer2.getName(), false, SOLUTION_STIRER_2);
   // delay(10000);
   //  update the sensor values every 2s
-  if ((millis() - lastUpdateAt) > 2000)
-  { // update in 2s interval
-    // unsigned long uptimeValue = millis() / 1000;
+  if ((millis() - lastUpdateAt) > THRESHOLD)
+  { 
+    uint32_t uptimeValue = millis() / 1000;
     DEBUG_PRINT("Updating sensor value for uptimeSensor: ");
     readCount++;
     DEBUG_PRINTLN(readCount);
-    uptimeSensor.setValue(readCount);
+    uptimeSensor.setValue(uptimeValue);
     // ignore the imitial readings as it takes time for the sensors to stabilize
     if (readCount > INITIAL_READER_COUNTER )
     {
