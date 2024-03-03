@@ -23,4 +23,3 @@ Generally there are two types of Nutrients.
 | Total N | 12% |
 | CaO | 15% |
 | MgO | 5% |
-

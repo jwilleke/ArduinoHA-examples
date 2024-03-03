@@ -40,4 +40,3 @@ Grow-Tent consists of the following sub components.
 
 - [FireBeetle 2 ESP32-E](/docs/Devices/FireBeetle%202%20ESP32-E.md)
 - [FireBeetle 2 Shield](/docs/Devices/FireBeetle%202-DFR0762-IO-shield.md)
-
