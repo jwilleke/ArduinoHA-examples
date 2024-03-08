@@ -1,6 +1,6 @@
 # pH or Potential Hydrogen
 
-> WARNING ph UP and pH Down solutions are snesitive and a very little goes a long way!
+> WARNING ph UP and pH Down solutions are __EXTREMLY snesitive__ and a very little goes a long way!
 
 One of the most important indicators for water quality is its pH level. The pH scale runs from 0 to 14 and measures the acid or base quality of water. A pH of 7 is neutral, while a reading below 7 is acidic, and one above 7 is alkaline or basic.
 

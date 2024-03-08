@@ -1,6 +1,8 @@
 # pH UP and pH Down
 
-> WARNING ph UP and pH Down solutions are snesitive and a very little goes a long way!
+> WARNING ph UP and pH Down solutions are __EXTREMLY snesitive__ and a very little goes a long way!
+
+About 2 oz rasiesd my 2 gallon system 0.6 pH
 
 Stabilize your nutrient pH with General Hydroponics® pH Up and pH Down. pH is important because it affects availability and absorption of several of the 16 atomic elements needed for plant growth.
 
