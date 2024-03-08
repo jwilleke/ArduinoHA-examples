@@ -14,7 +14,7 @@ Here's a summary of why daisy chaining works with 1-wire:
 
 ### Shared data line
 
-Unlike traditional communication protocols that require dedicated I/O pins for each device, 1-wire devices utilize a single data line for communication. This shared bus, called the 1-wire bus, allows connection of multiple devices to a single pin.
+Unlike traditional communication protocols that require dedicated I/O pins for each device, 1-wire devices utilize a single data line for communication. This shared bus, called the 1-wire bus, allows connection of multiple devices to a single digital IO pin.
 
 ### Unique addressing
 

@@ -1,5 +1,7 @@
 # pH UP and pH Down
 
+> WARNING ph UP and pH Down solutions are snesitive and a very little goes a long way!
+
 Stabilize your nutrient pH with General Hydroponics® pH Up and pH Down. pH is important because it affects availability and absorption of several of the 16 atomic elements needed for plant growth.
 
 Maximum absorption of these elements is found at pH readings 5.5 to 6.5.
