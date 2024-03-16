@@ -35,3 +35,7 @@ Lumens measures the perceived brightness of light for the human eye. It consider
 E26 is the technical designation according to the international standard. The "E" stands for Edison screw (named after the inventor) and "26" refers to the diameter of the screw base in millimeters (around 26mm).
 
 E26 is also called the "Medium screw base" is a general term describing the threading mechanism.
+
+## Grow Light Calclations
+
+[Grow Light Calclations](https://docs.google.com/spreadsheets/d/1OvnECUJnn3tCHsrgey5ePvCSW4g0rkUCXRpo2mlVyRs/edit?usp=sharing) is ashhet from [Urban Leaf](https://www.geturbanleaf.com/) which performs variouse calculations on Grow Light.
