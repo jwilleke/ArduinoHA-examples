@@ -15,7 +15,6 @@ Drip irregation into the buckets.
 
 [Perlite](https://www.griffins.com) holds water better than clay or almost anything else.
 
-https://youtu.be/vriXkraoLYI?si=Fqj1_0yopmOLT6Yy
+<https://youtu.be/vriXkraoLYI?si=Fqj1_0yopmOLT6Yy>
 
 [Best Way to Start Tomato Seeds Indoors](https://youtu.be/ed8OR49Bj4k?si=-PAB9ppMG-v3ewtr)
-

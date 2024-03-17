@@ -8,7 +8,6 @@ My objective is to create an Edible Indoor Garden which can yield food year arou
 
 Hydroponic Systems can be separated into two broad classifications and seven others.
 
-
 ## What to Grow?
 
 That was a Molly question.
@@ -22,7 +21,6 @@ That was a Molly question.
   - Chives
   - Oregano
   - Italian parsley
-
 
 ## Lighting
 

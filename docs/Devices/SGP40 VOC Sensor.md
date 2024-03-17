@@ -1,5 +1,8 @@
 # SGP40 VOC Sensor
 
+> As far as I know, this will not work with ESP32 Devices.
+
+
 From our requirment to know the CO2 concentration we used this
 [SGP40 VOC Sensor](https://www.amazon.com/dp/B09FKFYMPR?ref=ppx_yo2ov_dt_b_product_details&th=1)
 
