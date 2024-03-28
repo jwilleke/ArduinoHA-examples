@@ -1,0 +1,65 @@
+[
+  {
+    // normal button
+    "payload": "off",
+    "data": {
+      "entity_id": "switch.nutrient_tank_stirer_1",
+      "old_state": {
+        "entity_id": "switch.nutrient_tank_stirer_1",
+        "state": "on",
+        "attributes": {
+          "device_class": "switch",
+          "icon": "mdi:pot-mix",
+          "friendly_name": "Nutrient Tank Stirer 1"
+        },
+        "last_changed": "2024-03-23T12:57:05.270112+00:00",
+        "last_updated": "2024-03-23T12:57:05.270112+00:00",
+        "context": {
+          "id": "01HSNP5Q7612PVJ4X9JNWRBRHA",
+          "parent_id": null,
+          "user_id": "59569fa4a26444a3a755e1a9122c0139"
+        }
+      },
+      "new_state": {
+        "entity_id": "switch.nutrient_tank_stirer_1",
+        "state": "off",
+        "attributes": {
+          "device_class": "switch",
+          "icon": "mdi:pot-mix",
+          "friendly_name": "Nutrient Tank Stirer 1"
+        },
+        "last_changed": "2024-03-23T12:57:06.906290+00:00",
+        "last_updated": "2024-03-23T12:57:06.906290+00:00",
+        "context": {
+          "id": "01HSNP5RYCBHY4DYJ2KTKY4H1N",
+          "parent_id": null,
+          "user_id": "59569fa4a26444a3a755e1a9122c0139"
+        },
+        "timeSinceChangedMs": 8
+      }
+    },
+    "topic": "switch.nutrient_tank_stirer_1",
+    "_msgid": "deaf0e480854df15"
+  },
+  {
+    // button from node-red-contrib-home-assistant-websocket
+    "payload": "2024-03-23T12:57:37.531408+00:00",
+    "topic": "button.mister",
+    "data": {
+      "entity_id": "button.mister",
+      "state": "2024-03-23T12:57:37.531408+00:00",
+      "attributes": {
+        "icon": "mdi:weather-pouring",
+        "friendly_name": "Mister"
+      },
+      "last_changed": "2024-03-23T12:57:37.531596+00:00",
+      "last_updated": "2024-03-23T12:57:37.531596+00:00",
+      "context": {
+        "id": "01HSNP6PZT5SG4X5NXYN1W4FJG",
+        "parent_id": null,
+        "user_id": "59569fa4a26444a3a755e1a9122c0139"
+      }
+    },
+    "_msgid": "a68895fcbe122e63"
+  }
+]

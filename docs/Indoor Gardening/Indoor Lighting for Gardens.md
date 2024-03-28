@@ -1,5 +1,7 @@
 # Indoor Plant Lighting
 
+
+
 ## Simple Plant Lighting Bulbs
 
 Yes these are the better E26 bulbs for grow lights.
@@ -9,6 +11,10 @@ Yes these are the better E26 bulbs for grow lights.
 - [GE 9 W](https://amzn.to/3ahpmnT)
 
 ## Lighting Terms
+
+### Photosynthetic Photon Flux (PPF)
+is the total amount of light in the PAR zone that is produced by a light source each second. So PPF measures the “photosynthetically active photons emitted by a lighting system per second”.
+
 
 ### PAR (Parabolic Aluminized Reflector)
 
