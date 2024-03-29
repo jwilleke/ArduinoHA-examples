@@ -510,12 +510,9 @@ void loop()
       // set tankLevelSensor value
       int levelReading = digitalRead(LEVELPIN);
       tnakLevelSensor.setState(levelReading);
-    }
+    } // end if readCount > INITIAL_READER_COUNTER
     // reset loop timer
     lastUpdateAt = millis();
-  }
+  }// end if ((millis() - lastUpdateAt) > THRESHOLD)
 
-  // You can also change the state at runtime as shown below.
-  // This kind of logic can be used if you want to control your light using a button connected to the device.
-  // light.setState(true); // use any state you want
 }
