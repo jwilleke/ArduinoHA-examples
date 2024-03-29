@@ -360,7 +360,6 @@ void setup()
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-02-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
 
-
   // ==================== Setup Action Pins ====================
   // WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, pass);
@@ -472,9 +471,9 @@ void loop()
   mqtt.loop();
   /**
    * @brief This is the time in milliseconds since the last time the sensors were updated.
-  */
+   */
   if ((millis() - lastUpdateAt) > THRESHOLD)
-  { 
+  {
     /**
      * @brief Represents the uptime value in seconds.
      */
@@ -484,7 +483,7 @@ void loop()
     DEBUG_PRINTLN(readCount);
     uptimeSensor.setValue(uptimeValue);
     // ignore the imitial readings as it takes time for the sensors to stabilize
-    if (readCount > INITIAL_READER_COUNTER )
+    if (readCount > INITIAL_READER_COUNTER)
     {
       DEBUG_PRINTLN("Updating sensor value for orbSensor");
       // set orbSensor value
@@ -510,9 +509,8 @@ void loop()
       // set tankLevelSensor value
       int levelReading = digitalRead(LEVELPIN);
       tnakLevelSensor.setState(levelReading);
+      // reset loop timer
+      lastUpdateAt = millis();
     } // end if readCount > INITIAL_READER_COUNTER
-    // reset loop timer
-    lastUpdateAt = millis();
-  }// end if ((millis() - lastUpdateAt) > THRESHOLD)
-
+  } // end if ((millis() - lastUpdateAt) > THRESHOLD)
 }
