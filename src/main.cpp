@@ -173,7 +173,8 @@ double getValueTemperatureSensor()
   DEBUG_PRINT("tempRead: ");
   DEBUG_PRINTLN(tempRead);
   float TemperatureSum = tempRead / 16;
-
+  DEBUG_PRINT("Temp V alue: ");
+  DEBUG_PRINTLN(TemperatureSum);
   return TemperatureSum;
 }
 
