@@ -6,7 +6,8 @@
 
 #define SERIAL_BAUD_RATE 115200
 
-#define ANALOG_SUPPLY_VOLTAGE 5.0
+#define ANALOG_SUPPLY_VOLTAGE 5.0 // The voltage supplied to the analog sensors (pH, EC, DO, ORP)
+#define ADC_RANGE 1024.0
 #define BROKER_ADDR IPAddress(192, 168, 68, 122)
 
 #define MQTT_SENSOR_COUNT 20
@@ -45,6 +46,7 @@ Sensor pin settings
 #define KVALUEADDR 0x0A    //the start address of the K value stored in the EEPROM
 #define ECRES2 820.0
 #define ECREF 200.0
+#define DEFAULT_ORP_OFFSET_MV 0 // The default offset value for the ORP sensor
 
 #define DEBUG_PRINT_ENABLED // Comment out this line of code if you don't want to see the debug print
 

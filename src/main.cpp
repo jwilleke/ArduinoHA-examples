@@ -12,7 +12,8 @@
 bool exitApp = false;
 
 OneWire ds(ONEWIREPIN);
-
+// values for the ORP sensor need to know running voltage
+double SYSTEM_VOLTAGE = 5.00;
 // values for the phSensor
 double _temperature = 25.0;
 double _phValue = 7.0;
@@ -64,12 +65,25 @@ HASwitch stirer2("STIRER-2");
 // This it the last time the sensors were updated
 unsigned long lastUpdateAt = 0;
 
+
+void hardReboot() {
+  // Optional: Print a message before reboot (won't be visible after reset)
+  Serial.println("Triggering hard reboot...");
+
+  // Call NVIC_SystemReset to initiate software reset
+  NVIC_SystemReset();
+
+  // This line will never be reached due to the reset
+  //  Serial.println("This won't print!");
+}
+
+
 float getECValue(float temperature)
 {
   float _temperatureValue = temperature ? temperature : _temperature;
   float voltage = analogRead(ECPIN) / 1024.0 * 5000; // read the voltage (From https://github.com/DFRobot/DFRobot_EC/blob/master/example/DFRobot_EC_Test/DFRobot_EC_Test.ino)
-  DEBUG_PRINT("rawECVoltage: ");
-  DEBUG_PRINTLN(voltage);
+  //DEBUG_PRINT("rawECVoltage: ");
+  //DEBUG_PRINTLN(voltage);
   // float _ecvalue = 0.0;
   float _kvalue = 1.0;
   float _kvalueLow = 1.0;
@@ -88,12 +102,11 @@ float getECValue(float temperature)
     _kvalue = _kvalueLow;
   }
   float value = _rawEC * _kvalue; // calculate the EC value after automatic shift
-  DEBUG_PRINT("ecShiftVoltage: ");
-  DEBUG_PRINTLN(value);
+  //DEBUG_PRINT("ecShiftVoltage: ");
+  //DEBUG_PRINTLN(value);
   value = value / (1.0 + 0.0185 * (_temperatureValue - 25.0)); // temperature compensation
-  DEBUG_PRINT("EC Value after temp comp: ");
-  DEBUG_PRINTLN(value);
-
+  //DEBUG_PRINT("EC Value after temp comp: ");
+  //DEBUG_PRINTLN(value);
   return value;
 }
 
@@ -105,12 +118,12 @@ float getECValue(float temperature)
 double getTDSValue(float temperature)
 {
   float rawTDSReadVoltage = analogRead(TDSPIN);
-  DEBUG_PRINT("TDS rawTDSReadVoltage: ");
-  DEBUG_PRINTLN(rawTDSReadVoltage);
+  //DEBUG_PRINT("TDS rawTDSReadVoltage: ");
+  //DEBUG_PRINTLN(rawTDSReadVoltage);
   // calculate the average value of the sensor since we started
   averageTDSVoltage = (averageTDSVoltage + rawTDSReadVoltage) / readCount;
-  DEBUG_PRINT("TDS averageTDSVoltage: ");
-  DEBUG_PRINTLN(averageTDSVoltage);
+  //DEBUG_PRINT("TDS averageTDSVoltage: ");
+  //DEBUG_PRINTLN(averageTDSVoltage);
   // temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
   float compensationCoefficient = 1.0 + 0.02 * (temperature - 25.0);
   // temperature compensation
@@ -125,9 +138,6 @@ double getTDSValue(float temperature)
  */
 double getValueTemperatureSensor()
 {
-  DEBUG_PRINTLN("==> getValueTemperatureSensor");
-  // returns the temperature from one DS18S20 in DEG Celsius
-
   byte data[12];
   byte addr[8];
 
@@ -170,10 +180,9 @@ double getValueTemperatureSensor()
   byte LSB = data[0];
 
   float tempRead = ((MSB << 8) | LSB); // using two's compliment
-  DEBUG_PRINT("tempRead: ");
-  DEBUG_PRINTLN(tempRead);
+  //DEBUG_PRINT("tempRead: ");
+  //DEBUG_PRINTLN(tempRead);
   float TemperatureSum = tempRead / 16;
-
   return TemperatureSum;
 }
 
@@ -284,22 +293,35 @@ double getValuePHSensor(float temperature)
 {
   double temp = temperature ? temperature : _temperature;
   float rawPHVoltage = analogRead(PHPIN);
-  DEBUG_PRINT("rawPHVoltage: ");
-  DEBUG_PRINTLN(rawPHVoltage);
+  //DEBUG_PRINT("rawPHVoltage: ");
+  //DEBUG_PRINTLN(rawPHVoltage);
   float slope = (7.0 - 4.0) / ((_neutralVoltage - 1500.0) / 3.0 - (_acidVoltage - 1500.0) / 3.0);
   float intercept = 7.0 - slope * (_neutralVoltage - 1500.0) / 3.0;
   float _phValue = slope * (rawPHVoltage - 1500.0) / 3.0 + intercept; // y = k*x + b
 
   //* ANALOG_SUPPLY_VOLTAGE / 1023;
-  DEBUG_PRINT("pH Value: ");
-  DEBUG_PRINTLN(_phValue);
+  //DEBUG_PRINT("pH Value: ");
+  //DEBUG_PRINTLN(_phValue);
   return _phValue;
 }
 
 /**
- *
+ * @brief  This function is used to get the ORP value from the ORP sensor.
  */
+double getOrbSensorValue()
+{
+  double orbReading = analogRead(ORPPIN);
+  DEBUG_PRINT("  RAW OrbReading: ");
+  DEBUG_PRINT(orbReading);
+  DEBUG_PRINT("  ");
+  // ANALOG_SUPPLY_VOLTAGE * 1000 to get mv
+  double orpValue = ((30 * (ANALOG_SUPPLY_VOLTAGE * 1000)) - (75 * orbReading * (ANALOG_SUPPLY_VOLTAGE * 1000) / 1024)) / 75- DEFAULT_ORP_OFFSET_MV;
+  return orpValue;
+}
 
+/** 
+ * @brief This function is used to print the byte array
+*/
 void printByetArray(byte mac[], int len)
 {
   for (int i = len; i > 0; i--)
@@ -359,7 +381,6 @@ void setup()
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println("Starting setup...");
   Serial.println("DNS and DHCP-based web client test 2024-02-29"); // so I can keep track of what is loaded start the Ethernet connection:connect to wifi
-
 
   // ==================== Setup Action Pins ====================
   // WiFi.config(ip, gateway, subnet);
@@ -467,14 +488,15 @@ void setup()
   mqtt.begin(BROKER_ADDR);
 }
 
+
 void loop()
 {
   mqtt.loop();
   /**
    * @brief This is the time in milliseconds since the last time the sensors were updated.
-  */
+   */
   if ((millis() - lastUpdateAt) > THRESHOLD)
-  { 
+  {
     /**
      * @brief Represents the uptime value in seconds.
      */
@@ -484,38 +506,43 @@ void loop()
     DEBUG_PRINTLN(readCount);
     uptimeSensor.setValue(uptimeValue);
     // ignore the imitial readings as it takes time for the sensors to stabilize
-    if (readCount > INITIAL_READER_COUNTER )
+    if (readCount > INITIAL_READER_COUNTER)
     {
-      DEBUG_PRINTLN("Updating sensor value for orbSensor");
-      // set orbSensor value
-      uint16_t reading = analogRead(ORPPIN);
-      orbSensor.setValue(reading);
-      DEBUG_PRINTLN("Updating sensor value for temperature");
+      DEBUG_PRINTLN(DBAR);
+      DEBUG_PRINT("==> getValueTemperatureSensor: ");
+
+      //DEBUG_PRINT("Updating sensor value for temperature: ");
       // set temperature value
       float tempReading = getValueTemperatureSensor();
       temperature.setValue(tempReading);
-      DEBUG_PRINTLN("Updating sensor value for phSensor");
+      DEBUG_PRINTLN(tempReading);
+      // set orbSensor value
+      DEBUG_PRINT("Updating sensor value for orbSensor: ");
+      float orbReading = getOrbSensorValue();
+      orbSensor.setValue(orbReading);
+      DEBUG_PRINTLN(orbReading);
+      DEBUG_PRINT("Updating sensor value for phSensor: ");
       // set phSensor values
       float phReading = getValuePHSensor(tempReading);
       phSensor.setValue(phReading);
-      DEBUG_PRINTLN("Updating sensor value for tdsSensor");
+      DEBUG_PRINTLN(phReading);
+      DEBUG_PRINT("Updating sensor value for tdsSensor: ");
       // set tdsSensor value
       float tdsReading = getTDSValue(tempReading);
       tdsSensor.setValue(tdsReading);
-      DEBUG_PRINTLN("Updating sensor value for ecSensor");
+      DEBUG_PRINTLN(tdsReading);
+      DEBUG_PRINT("Updating sensor value for ecSensor: ");
       // set ecSensor value
       float ecReading = getECValue(tempReading);
       ecSensor.setValue(ecReading);
-      DEBUG_PRINTLN("Updating sensor value for tnakLevelSensor");
+      DEBUG_PRINTLN(ecReading);
+      DEBUG_PRINT("Updating sensor value for tnakLevelSensor: ");
       // set tankLevelSensor value
       int levelReading = digitalRead(LEVELPIN);
       tnakLevelSensor.setState(levelReading);
-    }
-    // reset loop timer
-    lastUpdateAt = millis();
-  }
-
-  // You can also change the state at runtime as shown below.
-  // This kind of logic can be used if you want to control your light using a button connected to the device.
-  // light.setState(true); // use any state you want
+      DEBUG_PRINTLN(levelReading);
+      // reset loop timer
+      lastUpdateAt = millis();
+    } // end if readCount > INITIAL_READER_COUNTER
+  } // end if ((millis() - lastUpdateAt) > THRESHOLD)
 }
