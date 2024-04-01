@@ -311,7 +311,11 @@ double getValuePHSensor(float temperature)
 double getOrbSensorValue()
 {
   double orbReading = analogRead(ORPPIN);
-  double orpValue = ((30 * (double) SYSTEM_VOLTAGE * 1000) - (75 * SYSTEM_VOLTAGE * 1000 / 1024)) / 75;
+  DEBUG_PRINT("  RAW OrbReading: ");
+  DEBUG_PRINT(orbReading);
+  DEBUG_PRINT("  ");
+  // ANALOG_SUPPLY_VOLTAGE * 1000 to get mv
+  double orpValue = ((30 * (ANALOG_SUPPLY_VOLTAGE * 1000)) - (75 * orbReading * (ANALOG_SUPPLY_VOLTAGE * 1000) / 1024)) / 75- DEFAULT_ORP_OFFSET_MV;
   return orpValue;
 }
 
