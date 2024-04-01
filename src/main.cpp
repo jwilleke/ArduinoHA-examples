@@ -170,11 +170,9 @@ double getValueTemperatureSensor()
   byte LSB = data[0];
 
   float tempRead = ((MSB << 8) | LSB); // using two's compliment
-  DEBUG_PRINT("tempRead: ");
-  DEBUG_PRINTLN(tempRead);
+  //DEBUG_PRINT("tempRead: ");
+  //DEBUG_PRINTLN(tempRead);
   float TemperatureSum = tempRead / 16;
-  DEBUG_PRINT("Temp Value: ");
-  DEBUG_PRINTLN(TemperatureSum);
   return TemperatureSum;
 }
 
@@ -486,14 +484,15 @@ void loop()
     // ignore the imitial readings as it takes time for the sensors to stabilize
     if (readCount > INITIAL_READER_COUNTER)
     {
+      //DEBUG_PRINT("Updating sensor value for temperature: ");
+      // set temperature value
+      float tempReading = getValueTemperatureSensor();
+      temperature.setValue(tempReading);
+      DEBUG_PRINT(tempReading);
       DEBUG_PRINTLN("Updating sensor value for orbSensor");
       // set orbSensor value
       uint16_t reading = analogRead(ORPPIN);
       orbSensor.setValue(reading);
-      DEBUG_PRINTLN("Updating sensor value for temperature");
-      // set temperature value
-      float tempReading = getValueTemperatureSensor();
-      temperature.setValue(tempReading);
       DEBUG_PRINTLN("Updating sensor value for phSensor");
       // set phSensor values
       float phReading = getValuePHSensor(tempReading);
