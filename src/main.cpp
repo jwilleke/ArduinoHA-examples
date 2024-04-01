@@ -125,8 +125,7 @@ double getTDSValue(float temperature)
  */
 double getValueTemperatureSensor()
 {
-  DEBUG_PRINTLN("==> getValueTemperatureSensor");
-  // returns the temperature from one DS18S20 in DEG Celsius
+  DEBUG_PRINTLN("==> getValueTemperatureSensor: ");
 
   byte data[12];
   byte addr[8];
